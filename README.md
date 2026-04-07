@@ -1,25 +1,39 @@
 # Marathon Training Plan — Sub 4:00
 
-A 10-week science-backed marathon training program built as an interactive React component.
+An interactive 10-week marathon training tracker. Log workouts, track progress, and follow a science-backed plan to break 4 hours.
 
-## Overview
+## Live App
 
-- **Goal:** Sub-4:00 marathon (9:09/mi avg pace)
-- **Schedule:** 5 runs/week, 1-2 lift days
-- **Peak mileage:** 44 mi/wk (Week 7)
-- **Structure:** Base → Build → Peak → Taper → Race
+**[kaiwhitaker.github.io/marathon-training-app](https://kaiwhitaker.github.io/marathon-training-app)**
 
 ## Features
 
-- Interactive week-by-week training plan
-- Tap any day for detailed coaching notes
-- Fueling & nutrition protocol
-- Race day pacing strategy
-- Mileage volume sparkline across all 10 weeks
+- **10-week structured plan** — Base → Build → Peak → Taper → Race
+- **Workout logging** — Distance, pace, effort level, and notes for every session
+- **Progress tracking** — Total miles run, workouts completed, % of plan done
+- **Visual mileage chart** — Planned vs. actual volume per week
+- **Fueling protocol** — Science-backed nutrition strategy for long runs and race day
+- **Race day pacing plan** — Mile-by-mile strategy for sub-4:00
+- **Persistent storage** — Logs save to your browser's localStorage (no account needed)
+- **Mobile-friendly** — Designed for phone use, add to home screen for app-like experience
 
 ## Files
 
-- `marathon-training-plan.jsx` — Full interactive React component (renders as a Claude artifact or in any React environment)
+- `index.html` — The entire app in a single file (React via CDN, no build step)
+- `marathon-training-plan.jsx` — Claude artifact version (for use inside Claude.ai)
+
+## Usage
+
+Open `index.html` in any browser, or visit the GitHub Pages link above. Your workout logs persist in localStorage on that device/browser.
+
+### Deploy to GitHub Pages
+
+The app is a single `index.html` file. To enable GitHub Pages:
+
+1. Go to **Settings → Pages** in this repo
+2. Set source to **Deploy from a branch**
+3. Select **main** branch, **/ (root)** folder
+4. Save — your app will be live at `https://kaiwhitaker.github.io/marathon-training-app`
 
 ## Target Races (June 2026)
 
@@ -28,4 +42,4 @@ A 10-week science-backed marathon training program built as an interactive React
 
 ## Built With
 
-React, built via Claude conversation — April 2026.
+React 18 (CDN), vanilla JS, localStorage. No build tools, no dependencies to install.

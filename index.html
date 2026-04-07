@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<title>Sub-4:00 Marathon Training</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { font-family: 'Source Sans 3', 'Source Sans Pro', -apple-system, sans-serif; color: #1a1a1a; background: #f9f9f9; min-height: 100vh; }
+  #root { max-width: 720px; margin: 0 auto; padding: 16px 16px 60px; }
+  input, textarea, button { font-family: inherit; }
+  button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  input:focus, textarea:focus, button:focus { outline: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script>
+const { useState, useEffect, useCallback, createElement: h } = React;
+
+// ─── DATA ────────────────────────────────────────────────────────────
+const WEEKS = [
+  { week:1, phase:"Base Building", totalMiles:28, days:[
+    { day:"Mon", type:"Easy", desc:"4 mi easy (10:00–10:30 pace)", miles:4, detail:"Conversational pace. If you can't talk in full sentences, slow down." },
+    { day:"Tue", type:"Tempo", desc:"5 mi w/ 2 mi tempo (9:00–9:10)", miles:5, detail:"1 mi warmup, 2 mi at goal marathon pace, 1 mi cooldown, 1 mi easy. Tempo = comfortably hard." },
+    { day:"Wed", type:"Rest/Lift", desc:"Strength training or full rest", miles:0, detail:"Full body lift: squats, deadlifts, lunges, core. Keep it moderate — you're supporting running, not bodybuilding." },
+    { day:"Thu", type:"Easy", desc:"4 mi easy", miles:4, detail:"Recovery pace. These runs build aerobic base without taxing your system." },
+    { day:"Fri", type:"Intervals", desc:"5 mi w/ 4×800m @ 8:20", miles:5, detail:"1 mi warmup, 4×800m at 8:15–8:25 with 400m jog recovery, 1 mi cooldown. Builds VO2max." },
+    { day:"Sat", type:"Long Run", desc:"10 mi easy (10:00–10:30)", miles:10, detail:"Start practicing fueling: bring water + 1 gel or chews at mile 5. This is your weekly cornerstone run." },
+    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Sleep, hydrate, stretch. Recovery is where adaptation happens." },
+  ]},
+  { week:2, phase:"Base Building", totalMiles:31, days:[
+    { day:"Mon", type:"Easy", desc:"4 mi easy", miles:4, detail:"Same easy effort. Stay disciplined — easy days should feel genuinely easy." },
+    { day:"Tue", type:"Tempo", desc:"6 mi w/ 3 mi tempo (9:00–9:10)", miles:6, detail:"1.5 mi warmup, 3 mi at marathon pace, 1.5 mi cooldown." },
+    { day:"Wed", type:"Rest/Lift", desc:"Strength training", miles:0, detail:"Same full body approach. Add single-leg exercises: Bulgarian split squats, single-leg deadlifts." },
+    { day:"Thu", type:"Easy", desc:"5 mi easy", miles:5, detail:"Slight bump in easy mileage. Listen to your body." },
+    { day:"Fri", type:"Intervals", desc:"5 mi w/ 5×800m @ 8:20", miles:5, detail:"Added one interval. Keep recovery jogs honest — don't rush them." },
+    { day:"Sat", type:"Long Run", desc:"11 mi easy", miles:11, detail:"Fuel at mile 5 and mile 8. Practice eating/drinking while running — it's a skill." },
+    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Recovery day. Foam roll, hydrate, eat well." },
+  ]},
+  { week:3, phase:"Build Phase", totalMiles:35, days:[
+    { day:"Mon", type:"Easy", desc:"5 mi easy", miles:5, detail:"Steady easy effort. You should finish these runs feeling like you could do more." },
+    { day:"Tue", type:"Tempo", desc:"7 mi w/ 4 mi tempo (8:55–9:05)", miles:7, detail:"1.5 mi warmup, 4 mi at or slightly below marathon pace, 1.5 mi cooldown." },
+    { day:"Wed", type:"Rest/Lift", desc:"Strength training", miles:0, detail:"Reduce weight slightly as mileage increases. Focus on hip stability and glute activation." },
+    { day:"Thu", type:"Easy", desc:"5 mi easy", miles:5, detail:"Recovery effort. Good day for a flat, easy route." },
+    { day:"Fri", type:"Intervals", desc:"6 mi w/ 6×800m @ 8:15", miles:6, detail:"Slight pace increase on intervals. These build the speed reserve that makes marathon pace feel easier." },
+    { day:"Sat", type:"Long Run", desc:"12 mi easy", miles:12, detail:"First time past your 11.8 wall — but this time with fuel. Gel/chews every 45 min after mile 4." },
+    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Big week. Rest hard." },
+  ]},
+  { week:4, phase:"Build Phase", totalMiles:32, days:[
+    { day:"Mon", type:"Easy", desc:"4 mi easy", miles:4, detail:"Cutback week — intentionally lower volume to let your body absorb the work from weeks 1–3." },
+    { day:"Tue", type:"Tempo", desc:"5 mi w/ 2 mi tempo", miles:5, detail:"Shorter tempo. This is active recovery, not a push week." },
+    { day:"Wed", type:"Rest/Lift", desc:"Strength or rest", miles:0, detail:"Light session or full rest. Cutback weeks prevent overtraining." },
+    { day:"Thu", type:"Easy", desc:"4 mi easy", miles:4, detail:"Relaxed effort. Enjoy the lower volume." },
+    { day:"Fri", type:"Intervals", desc:"5 mi w/ 4×800m @ 8:15", miles:5, detail:"Fewer intervals, same quality. Stay sharp without accumulating fatigue." },
+    { day:"Sat", type:"Long Run", desc:"14 mi easy", miles:14, detail:"Despite being cutback, the long run still progresses. Fuel every 30–45 min. Test your race-day nutrition plan." },
+    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Rest and assess: any nagging pains? Address them now before peak weeks." },
+  ]},
+  { week:5, phase:"Peak Phase", totalMiles:39, days:[
+    { day:"Mon", type:"Easy", desc:"5 mi easy", miles:5, detail:"Back to building. You should feel refreshed from cutback week." },
+    { day:"Tue", type:"Tempo", desc:"8 mi w/ 5 mi tempo (8:50–9:00)", miles:8, detail:"Biggest tempo yet. 1.5 mi warmup, 5 mi at marathon pace, 1.5 mi cooldown. This is a key workout." },
+    { day:"Wed", type:"Rest/Lift", desc:"Light strength", miles:0, detail:"Reduce lifting intensity. Focus on mobility, hip stability, and core. No heavy squats." },
+    { day:"Thu", type:"Easy", desc:"5 mi easy", miles:5, detail:"Legs might be heavy from Tuesday. That's fine — keep the effort easy." },
+    { day:"Fri", type:"Intervals", desc:"6 mi w/ 3×1600m @ 8:10", miles:6, detail:"Mile repeats. 1 mi warmup, 3×1 mile at 8:10 with 800m jog recovery, 1 mi cooldown." },
+    { day:"Sat", type:"Long Run", desc:"15 mi w/ last 3 at MP", miles:15, detail:"12 mi easy, then pick up to marathon pace for the final 3 mi. Fueling is mandatory." },
+    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Biggest week so far. Prioritize sleep — aim for 8+ hours." },
+  ]},
+  { week:6, phase:"Peak Phase", totalMiles:42, days:[
+    { day:"Mon", type:"Easy", desc:"5 mi easy", miles:5, detail:"Easy effort. Keep these honest — ego is the enemy on easy days." },
+    { day:"Tue", type:"Tempo", desc:"8 mi w/ 5 mi tempo (8:50–9:00)", miles:8, detail:"Repeat of last week's key workout. Should feel slightly more controlled this time." },
+    { day:"Wed", type:"Easy", desc:"4 mi recovery", miles:4, detail:"Very easy shakeout. Can substitute 30 min of cross-training (bike, swim, elliptical)." },
+    { day:"Thu", type:"Intervals", desc:"6 mi w/ 4×1600m @ 8:10", miles:6, detail:"Added one mile repeat. Stay relaxed — fast and tense is slower than fast and relaxed." },
+    { day:"Fri", type:"Easy", desc:"4 mi easy", miles:4, detail:"Pre-long-run shakeout. Short and easy." },
+    { day:"Sat", type:"Long Run", desc:"18 mi easy w/ last 4 at MP", miles:18, detail:"THE BIG ONE. 14 mi easy, last 4 at marathon pace. Fuel every 30 min from mile 3 onward. Simulate race day: same shoes, same food, same timing." },
+    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Peak mileage week. You might feel rough Sunday — that's normal. Eat, sleep, recover." },
+  ]},
+  { week:7, phase:"Peak Phase", totalMiles:44, days:[
+    { day:"Mon", type:"Easy", desc:"5 mi easy", miles:5, detail:"You may still be recovering from Saturday's 18-miler. Go slow." },
+    { day:"Tue", type:"Tempo", desc:"8 mi w/ 6 mi tempo (8:50–9:00)", miles:8, detail:"Longest tempo of the plan. 1 mi warmup, 6 mi at marathon pace, 1 mi cooldown." },
+    { day:"Wed", type:"Easy", desc:"4 mi recovery", miles:4, detail:"Easy recovery. Walking breaks are fine if your legs are trashed." },
+    { day:"Thu", type:"Intervals", desc:"7 mi w/ 5×1600m @ 8:10", miles:7, detail:"Peak interval session. You're at your fittest here. Trust the work." },
+    { day:"Fri", type:"Easy", desc:"4 mi easy", miles:4, detail:"Shakeout before the long run. Stay loose." },
+    { day:"Sat", type:"Long Run", desc:"20 mi easy w/ last 4 at MP", miles:20, detail:"Longest run of the plan. This is your dress rehearsal. Everything race-day: nutrition timing, gear, pacing." },
+    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"You just ran 20 miles. Be proud. Rest completely." },
+  ]},
+  { week:8, phase:"Taper", totalMiles:32, days:[
+    { day:"Mon", type:"Easy", desc:"4 mi easy", miles:4, detail:"Taper begins. Mileage drops but intensity stays. You'll feel restless — that's good." },
+    { day:"Tue", type:"Tempo", desc:"6 mi w/ 3 mi tempo (8:50)", miles:6, detail:"Short, sharp tempo. Stay at marathon pace." },
+    { day:"Wed", type:"Rest/Lift", desc:"Very light strength or rest", miles:0, detail:"If lifting, go very light — bodyweight exercises, mobility work. Last lift before race." },
+    { day:"Thu", type:"Easy", desc:"4 mi easy", miles:4, detail:"Easy and short. You might feel oddly energetic — don't spend it." },
+    { day:"Fri", type:"Intervals", desc:"5 mi w/ 3×1600m @ 8:10", miles:5, detail:"Reduced intervals. Stay sharp without digging deep." },
+    { day:"Sat", type:"Long Run", desc:"13 mi easy", miles:13, detail:"Last long-ish run. All easy pace. Final fueling practice." },
+    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Rest. Trust the taper. You're not losing fitness — you're gaining freshness." },
+  ]},
+  { week:9, phase:"Taper", totalMiles:22, days:[
+    { day:"Mon", type:"Easy", desc:"4 mi easy", miles:4, detail:"Short and easy. Phantom aches are common during taper." },
+    { day:"Tue", type:"Tempo", desc:"5 mi w/ 2 mi tempo (8:50)", miles:5, detail:"Brief tempo to keep the engine warm. Nothing heroic." },
+    { day:"Wed", type:"Rest", desc:"Full rest", miles:0, detail:"Rest day. Hydrate aggressively this week. Start carb-loading lightly." },
+    { day:"Thu", type:"Easy", desc:"4 mi easy", miles:4, detail:"Gentle shakeout. Your legs should be feeling springy." },
+    { day:"Fri", type:"Intervals", desc:"4 mi w/ 4×400m @ 8:00", miles:4, detail:"Short bursts to maintain turnover. These should feel fast and effortless." },
+    { day:"Sat", type:"Easy", desc:"5 mi w/ 2 at MP", miles:5, detail:"Last real workout. 3 mi easy, 2 mi at marathon pace. A confidence builder." },
+    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Rest. If racing next weekend, begin serious carb-loading (7–10g carbs/kg bodyweight)." },
+  ]},
+  { week:10, phase:"Race Week", totalMiles:8, days:[
+    { day:"Mon", type:"Easy", desc:"3 mi easy", miles:3, detail:"Very easy shakeout. Stay loose. Stay calm." },
+    { day:"Tue", type:"Easy", desc:"2 mi + 4×100m strides", miles:2, detail:"Short run with a few strides to keep your legs quick." },
+    { day:"Wed", type:"Rest", desc:"Full rest", miles:0, detail:"Rest. Lay out your race gear. Finalize your fuel plan." },
+    { day:"Thu", type:"Easy", desc:"2 mi easy shakeout", miles:2, detail:"Optional. 15–20 minutes just to move." },
+    { day:"Fri", type:"Rest", desc:"Full rest", miles:0, detail:"Pre-race rest. Eat carbs. Sleep early." },
+    { day:"Sat", type:"Rest", desc:"Pre-race prep", miles:0, detail:"Eat your planned pre-race meal, lay out everything, relax." },
+    { day:"Sun", type:"Race", desc:"MARATHON — 26.2 mi", miles:26.2, detail:"You did the work. Start conservative (9:15–9:20 first 10K), settle into pace (9:00–9:10 middle miles), push the last 10K. Fuel every 30 min." },
+  ]},
+];
+
+const FUELING = { title:"Nutrition & Fueling Protocol", sections:[
+  { name:"During Long Runs (>60 min)", items:["30–60g carbs per hour after the first 45 minutes","Options: energy gels (GU, Maurten, SiS), chews (Clif Bloks), or even gummy bears","Wash down each gel with 4–6 oz of water — not sports drink (double sugar = GI distress)","Practice every long run. Never try new fuel on race day."]},
+  { name:"Pre-Run (60–90 min before)", items:["200–300 calories of easy-to-digest carbs: toast w/ honey, banana, oatmeal, rice cake","8–12 oz water. Small amount of coffee is fine if you're used to it.","Avoid high fiber, fat, or protein close to run time."]},
+  { name:"Daily Nutrition", items:["Carbs are your fuel: 3–5g/kg bodyweight on easy days, 5–7g/kg on hard/long days","Protein: 1.4–1.7g/kg for recovery and muscle maintenance","Don't skimp on sodium — you lose 500–1500mg per hour of running in heat","Hydrate to thirst. Aim for pale yellow urine as a general gauge."]},
+  { name:"Race Week Carb Load", items:["3 days out: increase carbs to 7–10g/kg bodyweight per day","This is not just 'eat pasta' — it's rice, bread, potatoes, juice, pretzels all day","Reduce fiber and fat to make room for carbs without overeating total volume","Pre-race dinner: familiar, carb-heavy, low-fiber. White rice + chicken is a classic."]},
+]};
+
+const RACE_STRATEGY = { title:"Race Day Execution Plan",
+  paces:[
+    { segment:"Miles 1–6", pace:"9:15–9:20", note:"Bank patience, not time. The first 10K should feel too easy." },
+    { segment:"Miles 7–13", pace:"9:00–9:10", note:"Settle into marathon pace. You should feel strong and controlled." },
+    { segment:"Miles 14–20", pace:"9:00–9:10", note:"Maintain. This is where the race begins. Stay mentally engaged." },
+    { segment:"Miles 21–26.2", pace:"8:50–9:10", note:"If you have gas, use it. If you're surviving, hold pace." },
+  ],
+  fuel:"Gel or chews at miles 4, 8, 12, 16, 20, 23. Water at every aid station. Sports drink alternating with water."
+};
+
+const TC = { Easy:{bg:"#E8F5E9",text:"#2E7D32",border:"#A5D6A7"}, Tempo:{bg:"#FFF3E0",text:"#E65100",border:"#FFCC02"}, Intervals:{bg:"#FCE4EC",text:"#C62828",border:"#EF9A9A"}, "Long Run":{bg:"#E3F2FD",text:"#1565C0",border:"#90CAF9"}, "Rest/Lift":{bg:"#F3E5F5",text:"#6A1B9A",border:"#CE93D8"}, Rest:{bg:"#ECEFF1",text:"#546E7A",border:"#B0BEC5"}, Race:{bg:"#FFF9C4",text:"#F57F17",border:"#FFF176"} };
+const PC = { "Base Building":"#4CAF50", "Build Phase":"#FF9800", "Peak Phase":"#F44336", Taper:"#2196F3", "Race Week":"#FFC107" };
+
+// ─── STORAGE ─────────────────────────────────────────────────────────
+const store = {
+  get() { try { return JSON.parse(localStorage.getItem("marathon-logs") || "{}"); } catch(e) { return {}; } },
+  set(logs) { try { localStorage.setItem("marathon-logs", JSON.stringify(logs)); } catch(e) {} },
+  clear() { try { localStorage.removeItem("marathon-logs"); } catch(e) {} },
+};
+
+// ─── LOG FORM ────────────────────────────────────────────────────────
+function LogForm({ existing, onSave, onCancel, onDelete }) {
+  const [dist, setDist] = useState(existing ? existing.distance : "");
+  const [pace, setPace] = useState(existing ? existing.pace : "");
+  const [effort, setEffort] = useState(existing ? existing.effort : "moderate");
+  const [notes, setNotes] = useState(existing ? existing.notes : "");
+
+  const inp = { width:"100%", padding:"8px 10px", fontSize:13, border:"1px solid #ddd", borderRadius:6, boxSizing:"border-box", background:"#fafafa" };
+  const lbl = { fontSize:11, fontWeight:600, color:"#888", marginBottom:4, display:"block", textTransform:"uppercase", letterSpacing:0.8 };
+
+  return h("div", { style:{ marginTop:12, paddingTop:12, borderTop:"1px dashed #ddd" }, onClick:function(e){e.stopPropagation()} },
+    h("div", { style:{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 } },
+      h("div", null, h("label", { style:lbl }, "Distance (mi)"), h("input", { type:"number", step:"0.1", placeholder:"0.0", value:dist, onChange:function(e){setDist(e.target.value)}, style:inp })),
+      h("div", null, h("label", { style:lbl }, "Avg Pace (min/mi)"), h("input", { type:"text", placeholder:"9:27", value:pace, onChange:function(e){setPace(e.target.value)}, style:inp })),
+    ),
+    h("div", { style:{ marginBottom:10 } },
+      h("label", { style:lbl }, "Effort"),
+      h("div", { style:{ display:"flex", gap:6 } },
+        ["easy","moderate","hard","max"].map(function(e) {
+          return h("button", { key:e, onClick:function(){setEffort(e)}, style:{ flex:1, padding:"6px 0", fontSize:11, fontWeight:effort===e?700:500, border:effort===e?"2px solid #1a1a1a":"1px solid #ddd", borderRadius:5, background:effort===e?"#1a1a1a":"#fff", color:effort===e?"#fff":"#666", textTransform:"capitalize" } }, e);
+        })
+      )
+    ),
+    h("div", { style:{ marginBottom:12 } },
+      h("label", { style:lbl }, "Notes"),
+      h("textarea", { placeholder:"How did it feel?", value:notes, onChange:function(e){setNotes(e.target.value)}, style:Object.assign({}, inp, { minHeight:56, resize:"vertical" }) })
+    ),
+    h("div", { style:{ display:"flex", gap:8 } },
+      h("button", { onClick:function(){ onSave({ distance:parseFloat(dist)||0, pace:pace, effort:effort, notes:notes, completedAt:existing?existing.completedAt:new Date().toISOString() }) }, style:{ flex:1, padding:"9px 0", fontSize:13, fontWeight:700, background:"#2E7D32", color:"#fff", border:"none", borderRadius:6 } }, existing ? "Update" : "Log Workout"),
+      existing ? h("button", { onClick:onDelete, style:{ padding:"9px 14px", fontSize:13, fontWeight:600, background:"#fff", color:"#C62828", border:"1px solid #EF9A9A", borderRadius:6 } }, "Remove") : null,
+      h("button", { onClick:onCancel, style:{ padding:"9px 14px", fontSize:13, fontWeight:500, background:"#f5f5f5", color:"#666", border:"none", borderRadius:6 } }, "Cancel")
+    )
+  );
+}
+
+// ─── MAIN APP ────────────────────────────────────────────────────────
+function App() {
+  const [selWeek, setSelWeek] = useState(0);
+  const [tab, setTab] = useState("plan");
+  const [expDay, setExpDay] = useState(null);
+  const [logDay, setLogDay] = useState(null);
+  const [logs, setLogs] = useState(store.get());
+
+  var save = function(n) { setLogs(n); store.set(n); };
+  var lk = function(w,d) { return "w"+w+"-d"+d; };
+  var doSave = function(wi,di,data) { var n = Object.assign({}, logs); n[lk(wi,di)] = data; save(n); setLogDay(null); };
+  var doDelete = function(wi,di) { var n = Object.assign({}, logs); delete n[lk(wi,di)]; save(n); setLogDay(null); };
+  var doReset = function() { if(confirm("Clear all workout logs? This can't be undone.")) { setLogs({}); store.clear(); } };
+
+  var week = WEEKS[selWeek];
+  var totalLogged = Object.keys(logs).length;
+  var totalPlanned = WEEKS.reduce(function(a,w){return a+w.days.length},0);
+  var totalMi = Object.values(logs).reduce(function(a,l){return a+(l.distance||0)},0);
+  var weekDone = week.days.filter(function(_,i){return !!logs[lk(selWeek,i)]}).length;
+
+  return h("div", null,
+    // Header
+    h("div", { style:{ marginBottom:24 } },
+      h("div", { style:{ fontSize:11, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", color:"#999", marginBottom:4 } }, "10-Week Program"),
+      h("h1", { style:{ fontSize:28, fontWeight:900, margin:0, lineHeight:1.1 } }, "Sub-4:00 Marathon"),
+      h("div", { style:{ fontSize:14, color:"#666", marginTop:6 } }, "Target pace: 9:09/mi \u2022 Peak mileage: 44 mi/wk \u2022 5 runs/wk"),
+      totalLogged > 0 ? h("div", { style:{ display:"flex", gap:16, marginTop:10, fontSize:12, color:"#888" } },
+        h("span", null, h("strong", { style:{color:"#2E7D32"} }, totalLogged), " logged"),
+        h("span", null, h("strong", { style:{color:"#1565C0"} }, totalMi.toFixed(1)), " mi run"),
+        h("span", null, h("strong", { style:{color:"#E65100"} }, Math.round((totalLogged/totalPlanned)*100)+"%"), " complete"),
+      ) : null
+    ),
+
+    // Tabs
+    h("div", { style:{ display:"flex", gap:0, marginBottom:20, borderBottom:"2px solid #e0e0e0" } },
+      [{id:"plan",label:"Training Plan"},{id:"fuel",label:"Fueling"},{id:"race",label:"Race Strategy"}].map(function(t) {
+        return h("button", { key:t.id, onClick:function(){setTab(t.id)}, style:{ padding:"10px 20px", fontSize:13, fontWeight:tab===t.id?700:500, color:tab===t.id?"#1a1a1a":"#888", background:"none", border:"none", borderBottom:tab===t.id?"2px solid #1a1a1a":"2px solid transparent", marginBottom:-2 } }, t.label);
+      })
+    ),
+
+    // PLAN TAB
+    tab === "plan" ? h("div", null,
+      // Week selector
+      h("div", { style:{ display:"flex", gap:4, marginBottom:16, flexWrap:"wrap" } },
+        WEEKS.map(function(w,i) {
+          var wd = w.days.filter(function(_,di){return !!logs[lk(i,di)]}).length;
+          var all = wd === w.days.length;
+          return h("button", { key:i, onClick:function(){setSelWeek(i);setExpDay(null);setLogDay(null)}, style:{ width:56, padding:"8px 4px", fontSize:11, fontWeight:selWeek===i?700:500, background:selWeek===i?"#1a1a1a":all?"#E8F5E9":"#f5f5f5", color:selWeek===i?"#fff":all?"#2E7D32":"#666", border:all&&selWeek!==i?"1px solid #A5D6A7":"1px solid transparent", borderRadius:6, textAlign:"center", lineHeight:1.3, transition:"all 0.15s" } },
+            h("div", null, "Wk "+w.week),
+            h("div", { style:{fontSize:10,opacity:0.7} }, wd>0?(wd+"/7"):(w.totalMiles+" mi"))
+          );
+        })
+      ),
+      // Week header
+      h("div", { style:{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:12 } },
+        h("div", null,
+          h("span", { style:{fontSize:18,fontWeight:700} }, "Week "+week.week),
+          h("span", { style:{ fontSize:11, fontWeight:600, color:PC[week.phase], marginLeft:10, padding:"3px 8px", background:PC[week.phase]+"18", borderRadius:4 } }, week.phase)
+        ),
+        h("div", { style:{fontSize:13,color:"#888"} }, h("strong", null, weekDone+"/7"), " done \u2022 ", h("strong", {style:{color:"#666"}}, week.totalMiles+" mi"))
+      ),
+      // Sparkline
+      h("div", { style:{ display:"flex", gap:3, alignItems:"flex-end", height:40, marginBottom:16 } },
+        WEEKS.map(function(w,i) {
+          var am = w.days.reduce(function(a,_,di){return a+(logs[lk(i,di)]?logs[lk(i,di)].distance||0:0)},0);
+          return h("div", { key:i, style:{ flex:1, height:(w.totalMiles/44*100)+"%", background:selWeek===i?"#1a1a1a":"#e0e0e0", borderRadius:2, transition:"all 0.2s", minHeight:4, position:"relative", overflow:"hidden" } },
+            am > 0 ? h("div", { style:{ position:"absolute", bottom:0, left:0, right:0, height:Math.min(am/w.totalMiles*100,100)+"%", background:selWeek===i?"#4CAF50":"#A5D6A7", borderRadius:2, transition:"all 0.3s" } }) : null
+          );
+        })
+      ),
+      // Days
+      h("div", { style:{ display:"flex", flexDirection:"column", gap:6 } },
+        week.days.map(function(d,i) {
+          var colors = TC[d.type] || TC.Rest;
+          var isExp = expDay === i;
+          var isLog = logDay === i;
+          var log = logs[lk(selWeek,i)];
+          var done = !!log;
+
+          return h("div", { key:i, style:{ background:done?"#FAFFF9":"#fff", border:"1px solid "+(done?"#C8E6C9":isExp?colors.border:"#e8e8e8"), borderRadius:8, padding:"12px 14px", transition:"all 0.15s", borderLeft:done?"3px solid #4CAF50":undefined } },
+            // Row
+            h("div", { onClick:function(){setExpDay(isExp?null:i);if(isLog)setLogDay(null)}, style:{ display:"flex", alignItems:"center", gap:10, cursor:"pointer" } },
+              done
+                ? h("div", { style:{ width:20,height:20,borderRadius:10,background:"#4CAF50",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 } }, h("span", { style:{color:"#fff",fontSize:12,lineHeight:1} }, "\u2713"))
+                : h("div", { style:{ width:20,height:20,borderRadius:10,border:"2px solid #ddd",flexShrink:0 } }),
+              h("div", { style:{width:30,fontSize:12,fontWeight:600,color:"#999"} }, d.day),
+              h("span", { style:{ fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:3,background:colors.bg,color:colors.text,letterSpacing:0.5,textTransform:"uppercase",flexShrink:0,opacity:done?0.7:1 } }, d.type),
+              h("div", { style:{fontSize:13,fontWeight:500,flex:1,color:done?"#555":"#1a1a1a"} }, d.desc),
+              d.miles > 0 ? h("div", { style:{fontSize:12,fontWeight:600,color:"#999",flexShrink:0} }, d.miles+" mi") : null
+            ),
+            // Compact log preview
+            done && !isExp ? h("div", { style:{marginTop:6,marginLeft:30,display:"flex",gap:12,fontSize:11,color:"#888"} },
+              log.distance>0 ? h("span",null,log.distance+" mi") : null,
+              log.pace ? h("span",null,log.pace+"/mi") : null,
+              log.effort ? h("span",{style:{textTransform:"capitalize"}},log.effort) : null,
+              log.notes ? h("span",{style:{color:"#aaa",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},log.notes) : null
+            ) : null,
+            // Expanded detail
+            isExp ? h("div", { style:{marginTop:10,paddingTop:10,borderTop:"1px solid #f0f0f0"} },
+              h("div", { style:{fontSize:13,lineHeight:1.6,color:"#555",marginBottom:10} }, d.detail),
+              done && !isLog ? h("div", { style:{background:"#f8f9f8",borderRadius:6,padding:10,marginBottom:10} },
+                h("div", { style:{fontSize:11,fontWeight:700,color:"#2E7D32",marginBottom:6,textTransform:"uppercase",letterSpacing:0.8} }, "Workout Log"),
+                h("div", { style:{display:"flex",gap:16,fontSize:13,color:"#555",flexWrap:"wrap"} },
+                  log.distance>0?h("div",null,h("strong",null,log.distance)," mi"):null,
+                  log.pace?h("div",null,h("strong",null,log.pace),"/mi"):null,
+                  log.effort?h("div",{style:{textTransform:"capitalize"}},"Effort: ",h("strong",null,log.effort)):null
+                ),
+                log.notes?h("div",{style:{fontSize:13,color:"#666",marginTop:6,fontStyle:"italic"}},'"'+log.notes+'"'):null,
+                h("div",{style:{fontSize:10,color:"#bbb",marginTop:4}},new Date(log.completedAt).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}))
+              ) : null,
+              !isLog
+                ? h("button", { onClick:function(e){e.stopPropagation();setLogDay(i)}, style:{ padding:"8px 16px",fontSize:12,fontWeight:600,background:done?"#f5f5f5":"#1a1a1a",color:done?"#666":"#fff",border:done?"1px solid #ddd":"none",borderRadius:6 } }, done?"Edit Log":"Log Workout")
+                : h(LogForm, { existing:log, onSave:function(data){doSave(selWeek,i,data)}, onCancel:function(){setLogDay(null)}, onDelete:function(){doDelete(selWeek,i)} })
+            ) : null
+          );
+        })
+      ),
+      totalLogged>0 ? h("div",{style:{marginTop:20,textAlign:"right"}},h("button",{onClick:doReset,style:{fontSize:11,color:"#bbb",background:"none",border:"none",textDecoration:"underline"}},"Reset all logs")) : null
+    ) : null,
+
+    // FUELING TAB
+    tab === "fuel" ? h("div", null,
+      h("h2", { style:{fontSize:20,fontWeight:700,marginBottom:16} }, FUELING.title),
+      FUELING.sections.map(function(s,i) {
+        return h("div", { key:i, style:{marginBottom:20} },
+          h("h3", { style:{fontSize:14,fontWeight:700,marginBottom:8,color:"#333"} }, s.name),
+          s.items.map(function(item,j) {
+            return h("div", { key:j, style:{fontSize:13,lineHeight:1.6,color:"#555",paddingLeft:14,marginBottom:4,position:"relative"} },
+              h("span", { style:{position:"absolute",left:0,color:"#ccc"} }, "\u2022"), item
+            );
+          })
+        );
+      }),
+      h("div", { style:{marginTop:20,padding:14,background:"#FFF8E1",borderRadius:8,border:"1px solid #FFE082",fontSize:13,lineHeight:1.6,color:"#6D4C00"} },
+        h("strong", null, "Your 11.8-mile lesson:"), " You bonked because you ran 90+ minutes on just a glass of water. With proper fueling, that same effort gets you to 13.1 and beyond."
+      )
+    ) : null,
+
+    // RACE STRATEGY TAB
+    tab === "race" ? h("div", null,
+      h("h2", { style:{fontSize:20,fontWeight:700,marginBottom:16} }, RACE_STRATEGY.title),
+      h("div", { style:{fontSize:13,color:"#555",marginBottom:16,lineHeight:1.6} }, "The #1 mistake in a marathon is going out too fast. Start slower than you think you should. The race begins at mile 20."),
+      RACE_STRATEGY.paces.map(function(p,i) {
+        return h("div", { key:i, style:{display:"flex",gap:14,padding:"12px 0",borderBottom:i<RACE_STRATEGY.paces.length-1?"1px solid #f0f0f0":"none",alignItems:"flex-start"} },
+          h("div", { style:{width:90,flexShrink:0} },
+            h("div", { style:{fontSize:13,fontWeight:700} }, p.segment),
+            h("div", { style:{fontSize:16,fontWeight:300,color:"#1565C0",marginTop:2} }, p.pace)
+          ),
+          h("div", { style:{fontSize:13,color:"#555",lineHeight:1.5,paddingTop:2} }, p.note)
+        );
+      }),
+      h("div", { style:{marginTop:20,padding:14,background:"#E8F5E9",borderRadius:8,border:"1px solid #A5D6A7",fontSize:13,lineHeight:1.6,color:"#1B5E20"} }, h("strong",null,"Fuel stations: "), RACE_STRATEGY.fuel),
+      h("div", { style:{marginTop:12,padding:14,background:"#F3E5F5",borderRadius:8,border:"1px solid #CE93D8",fontSize:13,lineHeight:1.6,color:"#4A148C"} }, h("strong",null,"Target finish: "), "~3:55:00. That gives you a 5-minute buffer under 4:00.")
+    ) : null
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+</script>
+</body>
+</html>
