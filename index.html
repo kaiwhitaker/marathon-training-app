@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<title>Sub-4:00 Marathon Training</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Training Plan — Strength + Marathon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { -webkit-text-size-adjust: 100%; }
-  body { font-family: 'Source Sans 3', 'Source Sans Pro', -apple-system, sans-serif; color: #1a1a1a; background: #f9f9f9; min-height: 100vh; }
-  #root { max-width: 720px; margin: 0 auto; padding: 16px 16px 60px; }
-  input, textarea, button { font-family: inherit; }
-  button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
-  input:focus, textarea:focus, button:focus { outline: none; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'DM Sans',sans-serif;color:#e8e4df;background:#111;min-height:100vh}
+#root{max-width:760px;margin:0 auto;padding:16px 16px 80px}
+input,textarea,button,select{font-family:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+input:focus,textarea:focus,button:focus{outline:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
 </style>
 </head>
 <body>
@@ -23,318 +25,485 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script>
-const { useState, useEffect, useCallback, createElement: h } = React;
+var h=React.createElement,useState=React.useState,useEffect=React.useEffect,useCallback=React.useCallback;
 
-// ─── DATA ────────────────────────────────────────────────────────────
-const WEEKS = [
-  { week:1, phase:"Base Building", totalMiles:28, days:[
-    { day:"Mon", type:"Easy", desc:"4 mi easy (10:00–10:30 pace)", miles:4, detail:"Conversational pace. If you can't talk in full sentences, slow down." },
-    { day:"Tue", type:"Tempo", desc:"5 mi w/ 2 mi tempo (9:00–9:10)", miles:5, detail:"1 mi warmup, 2 mi at goal marathon pace, 1 mi cooldown, 1 mi easy. Tempo = comfortably hard." },
-    { day:"Wed", type:"Rest/Lift", desc:"Strength training or full rest", miles:0, detail:"Full body lift: squats, deadlifts, lunges, core. Keep it moderate — you're supporting running, not bodybuilding." },
-    { day:"Thu", type:"Easy", desc:"4 mi easy", miles:4, detail:"Recovery pace. These runs build aerobic base without taxing your system." },
-    { day:"Fri", type:"Intervals", desc:"5 mi w/ 4×800m @ 8:20", miles:5, detail:"1 mi warmup, 4×800m at 8:15–8:25 with 400m jog recovery, 1 mi cooldown. Builds VO2max." },
-    { day:"Sat", type:"Long Run", desc:"10 mi easy (10:00–10:30)", miles:10, detail:"Start practicing fueling: bring water + 1 gel or chews at mile 5. This is your weekly cornerstone run." },
-    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Sleep, hydrate, stretch. Recovery is where adaptation happens." },
-  ]},
-  { week:2, phase:"Base Building", totalMiles:31, days:[
-    { day:"Mon", type:"Easy", desc:"4 mi easy", miles:4, detail:"Same easy effort. Stay disciplined — easy days should feel genuinely easy." },
-    { day:"Tue", type:"Tempo", desc:"6 mi w/ 3 mi tempo (9:00–9:10)", miles:6, detail:"1.5 mi warmup, 3 mi at marathon pace, 1.5 mi cooldown." },
-    { day:"Wed", type:"Rest/Lift", desc:"Strength training", miles:0, detail:"Same full body approach. Add single-leg exercises: Bulgarian split squats, single-leg deadlifts." },
-    { day:"Thu", type:"Easy", desc:"5 mi easy", miles:5, detail:"Slight bump in easy mileage. Listen to your body." },
-    { day:"Fri", type:"Intervals", desc:"5 mi w/ 5×800m @ 8:20", miles:5, detail:"Added one interval. Keep recovery jogs honest — don't rush them." },
-    { day:"Sat", type:"Long Run", desc:"11 mi easy", miles:11, detail:"Fuel at mile 5 and mile 8. Practice eating/drinking while running — it's a skill." },
-    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Recovery day. Foam roll, hydrate, eat well." },
-  ]},
-  { week:3, phase:"Build Phase", totalMiles:35, days:[
-    { day:"Mon", type:"Easy", desc:"5 mi easy", miles:5, detail:"Steady easy effort. You should finish these runs feeling like you could do more." },
-    { day:"Tue", type:"Tempo", desc:"7 mi w/ 4 mi tempo (8:55–9:05)", miles:7, detail:"1.5 mi warmup, 4 mi at or slightly below marathon pace, 1.5 mi cooldown." },
-    { day:"Wed", type:"Rest/Lift", desc:"Strength training", miles:0, detail:"Reduce weight slightly as mileage increases. Focus on hip stability and glute activation." },
-    { day:"Thu", type:"Easy", desc:"5 mi easy", miles:5, detail:"Recovery effort. Good day for a flat, easy route." },
-    { day:"Fri", type:"Intervals", desc:"6 mi w/ 6×800m @ 8:15", miles:6, detail:"Slight pace increase on intervals. These build the speed reserve that makes marathon pace feel easier." },
-    { day:"Sat", type:"Long Run", desc:"12 mi easy", miles:12, detail:"First time past your 11.8 wall — but this time with fuel. Gel/chews every 45 min after mile 4." },
-    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Big week. Rest hard." },
-  ]},
-  { week:4, phase:"Build Phase", totalMiles:32, days:[
-    { day:"Mon", type:"Easy", desc:"4 mi easy", miles:4, detail:"Cutback week — intentionally lower volume to let your body absorb the work from weeks 1–3." },
-    { day:"Tue", type:"Tempo", desc:"5 mi w/ 2 mi tempo", miles:5, detail:"Shorter tempo. This is active recovery, not a push week." },
-    { day:"Wed", type:"Rest/Lift", desc:"Strength or rest", miles:0, detail:"Light session or full rest. Cutback weeks prevent overtraining." },
-    { day:"Thu", type:"Easy", desc:"4 mi easy", miles:4, detail:"Relaxed effort. Enjoy the lower volume." },
-    { day:"Fri", type:"Intervals", desc:"5 mi w/ 4×800m @ 8:15", miles:5, detail:"Fewer intervals, same quality. Stay sharp without accumulating fatigue." },
-    { day:"Sat", type:"Long Run", desc:"14 mi easy", miles:14, detail:"Despite being cutback, the long run still progresses. Fuel every 30–45 min. Test your race-day nutrition plan." },
-    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Rest and assess: any nagging pains? Address them now before peak weeks." },
-  ]},
-  { week:5, phase:"Peak Phase", totalMiles:39, days:[
-    { day:"Mon", type:"Easy", desc:"5 mi easy", miles:5, detail:"Back to building. You should feel refreshed from cutback week." },
-    { day:"Tue", type:"Tempo", desc:"8 mi w/ 5 mi tempo (8:50–9:00)", miles:8, detail:"Biggest tempo yet. 1.5 mi warmup, 5 mi at marathon pace, 1.5 mi cooldown. This is a key workout." },
-    { day:"Wed", type:"Rest/Lift", desc:"Light strength", miles:0, detail:"Reduce lifting intensity. Focus on mobility, hip stability, and core. No heavy squats." },
-    { day:"Thu", type:"Easy", desc:"5 mi easy", miles:5, detail:"Legs might be heavy from Tuesday. That's fine — keep the effort easy." },
-    { day:"Fri", type:"Intervals", desc:"6 mi w/ 3×1600m @ 8:10", miles:6, detail:"Mile repeats. 1 mi warmup, 3×1 mile at 8:10 with 800m jog recovery, 1 mi cooldown." },
-    { day:"Sat", type:"Long Run", desc:"15 mi w/ last 3 at MP", miles:15, detail:"12 mi easy, then pick up to marathon pace for the final 3 mi. Fueling is mandatory." },
-    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Biggest week so far. Prioritize sleep — aim for 8+ hours." },
-  ]},
-  { week:6, phase:"Peak Phase", totalMiles:42, days:[
-    { day:"Mon", type:"Easy", desc:"5 mi easy", miles:5, detail:"Easy effort. Keep these honest — ego is the enemy on easy days." },
-    { day:"Tue", type:"Tempo", desc:"8 mi w/ 5 mi tempo (8:50–9:00)", miles:8, detail:"Repeat of last week's key workout. Should feel slightly more controlled this time." },
-    { day:"Wed", type:"Easy", desc:"4 mi recovery", miles:4, detail:"Very easy shakeout. Can substitute 30 min of cross-training (bike, swim, elliptical)." },
-    { day:"Thu", type:"Intervals", desc:"6 mi w/ 4×1600m @ 8:10", miles:6, detail:"Added one mile repeat. Stay relaxed — fast and tense is slower than fast and relaxed." },
-    { day:"Fri", type:"Easy", desc:"4 mi easy", miles:4, detail:"Pre-long-run shakeout. Short and easy." },
-    { day:"Sat", type:"Long Run", desc:"18 mi easy w/ last 4 at MP", miles:18, detail:"THE BIG ONE. 14 mi easy, last 4 at marathon pace. Fuel every 30 min from mile 3 onward. Simulate race day: same shoes, same food, same timing." },
-    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Peak mileage week. You might feel rough Sunday — that's normal. Eat, sleep, recover." },
-  ]},
-  { week:7, phase:"Peak Phase", totalMiles:44, days:[
-    { day:"Mon", type:"Easy", desc:"5 mi easy", miles:5, detail:"You may still be recovering from Saturday's 18-miler. Go slow." },
-    { day:"Tue", type:"Tempo", desc:"8 mi w/ 6 mi tempo (8:50–9:00)", miles:8, detail:"Longest tempo of the plan. 1 mi warmup, 6 mi at marathon pace, 1 mi cooldown." },
-    { day:"Wed", type:"Easy", desc:"4 mi recovery", miles:4, detail:"Easy recovery. Walking breaks are fine if your legs are trashed." },
-    { day:"Thu", type:"Intervals", desc:"7 mi w/ 5×1600m @ 8:10", miles:7, detail:"Peak interval session. You're at your fittest here. Trust the work." },
-    { day:"Fri", type:"Easy", desc:"4 mi easy", miles:4, detail:"Shakeout before the long run. Stay loose." },
-    { day:"Sat", type:"Long Run", desc:"20 mi easy w/ last 4 at MP", miles:20, detail:"Longest run of the plan. This is your dress rehearsal. Everything race-day: nutrition timing, gear, pacing." },
-    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"You just ran 20 miles. Be proud. Rest completely." },
-  ]},
-  { week:8, phase:"Taper", totalMiles:32, days:[
-    { day:"Mon", type:"Easy", desc:"4 mi easy", miles:4, detail:"Taper begins. Mileage drops but intensity stays. You'll feel restless — that's good." },
-    { day:"Tue", type:"Tempo", desc:"6 mi w/ 3 mi tempo (8:50)", miles:6, detail:"Short, sharp tempo. Stay at marathon pace." },
-    { day:"Wed", type:"Rest/Lift", desc:"Very light strength or rest", miles:0, detail:"If lifting, go very light — bodyweight exercises, mobility work. Last lift before race." },
-    { day:"Thu", type:"Easy", desc:"4 mi easy", miles:4, detail:"Easy and short. You might feel oddly energetic — don't spend it." },
-    { day:"Fri", type:"Intervals", desc:"5 mi w/ 3×1600m @ 8:10", miles:5, detail:"Reduced intervals. Stay sharp without digging deep." },
-    { day:"Sat", type:"Long Run", desc:"13 mi easy", miles:13, detail:"Last long-ish run. All easy pace. Final fueling practice." },
-    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Rest. Trust the taper. You're not losing fitness — you're gaining freshness." },
-  ]},
-  { week:9, phase:"Taper", totalMiles:22, days:[
-    { day:"Mon", type:"Easy", desc:"4 mi easy", miles:4, detail:"Short and easy. Phantom aches are common during taper." },
-    { day:"Tue", type:"Tempo", desc:"5 mi w/ 2 mi tempo (8:50)", miles:5, detail:"Brief tempo to keep the engine warm. Nothing heroic." },
-    { day:"Wed", type:"Rest", desc:"Full rest", miles:0, detail:"Rest day. Hydrate aggressively this week. Start carb-loading lightly." },
-    { day:"Thu", type:"Easy", desc:"4 mi easy", miles:4, detail:"Gentle shakeout. Your legs should be feeling springy." },
-    { day:"Fri", type:"Intervals", desc:"4 mi w/ 4×400m @ 8:00", miles:4, detail:"Short bursts to maintain turnover. These should feel fast and effortless." },
-    { day:"Sat", type:"Easy", desc:"5 mi w/ 2 at MP", miles:5, detail:"Last real workout. 3 mi easy, 2 mi at marathon pace. A confidence builder." },
-    { day:"Sun", type:"Rest", desc:"Full rest", miles:0, detail:"Rest. If racing next weekend, begin serious carb-loading (7–10g carbs/kg bodyweight)." },
-  ]},
-  { week:10, phase:"Race Week", totalMiles:8, days:[
-    { day:"Mon", type:"Easy", desc:"3 mi easy", miles:3, detail:"Very easy shakeout. Stay loose. Stay calm." },
-    { day:"Tue", type:"Easy", desc:"2 mi + 4×100m strides", miles:2, detail:"Short run with a few strides to keep your legs quick." },
-    { day:"Wed", type:"Rest", desc:"Full rest", miles:0, detail:"Rest. Lay out your race gear. Finalize your fuel plan." },
-    { day:"Thu", type:"Easy", desc:"2 mi easy shakeout", miles:2, detail:"Optional. 15–20 minutes just to move." },
-    { day:"Fri", type:"Rest", desc:"Full rest", miles:0, detail:"Pre-race rest. Eat carbs. Sleep early." },
-    { day:"Sat", type:"Rest", desc:"Pre-race prep", miles:0, detail:"Eat your planned pre-race meal, lay out everything, relax." },
-    { day:"Sun", type:"Race", desc:"MARATHON — 26.2 mi", miles:26.2, detail:"You did the work. Start conservative (9:15–9:20 first 10K), settle into pace (9:00–9:10 middle miles), push the last 10K. Fuel every 30 min." },
-  ]},
+// ─── COLORS ──────────────────────────────────────────────────────────
+var C={
+  bg:"#111",card:"#1a1a1a",cardHover:"#222",border:"#2a2a2a",borderLight:"#333",
+  text:"#e8e4df",textMuted:"#888",textDim:"#555",
+  accent:"#f0c040",accentDim:"#a08020",
+  green:"#4ade80",greenDim:"#166534",greenBg:"#0d2818",
+  blue:"#60a5fa",blueDim:"#1e3a5f",
+  red:"#f87171",redDim:"#7f1d1d",
+  orange:"#fb923c",orangeDim:"#9a3412",
+  purple:"#c084fc",purpleDim:"#581c87",
+  mono:"'JetBrains Mono',monospace",
+};
+
+// ─── TRAINING DATA ───────────────────────────────────────────────────
+// Lifting follows 5/3/1 inspired progression across 3 x 4-week blocks
+// Running caps at pain-free volume with gradual ramp
+// Pull-ups use GTG (grease the groove) + dedicated sets
+
+var LIFT_DAYS = {
+  upper_push: {
+    name:"Upper Push",icon:"\u{1F4AA}",color:C.blue,
+    mainLift:"Bench Press",
+    warmup:"5 min cardio + band pull-aparts + shoulder dislocates",
+    exercises:[
+      {name:"Bench Press",sets:"see progression",rpe:"7-9",note:"Main lift — follow weekly progression"},
+      {name:"Incline DB Press",sets:"3×10",rpe:"7-8",note:"30° incline on adjustable bench. 35-45 lb DBs. Squeeze at top."},
+      {name:"Overhead Press",sets:"3×8",rpe:"7-8",note:"Barbell from rack. Strict press, no leg drive. Brace core hard."},
+      {name:"Dips",sets:"3×max",rpe:"8",note:"On dip attachment. Add weight (DB between feet or belt) when you hit 15+ reps."},
+      {name:"Lateral Raises",sets:"3×15",rpe:"7",note:"Light, controlled. No swinging."},
+      {name:"DB Overhead Tricep Ext",sets:"3×12",rpe:"7",note:"Single DB, both hands. Full stretch at bottom. Can also do banded pushdowns."},
+    ]
+  },
+  lower: {
+    name:"Lower Body",icon:"\u{1F9B5}",color:C.orange,
+    mainLift:"Squat + Deadlift",
+    warmup:"5 min jump rope or jog + hip circles + bodyweight squats + leg swings",
+    exercises:[
+      {name:"Back Squat",sets:"see progression",rpe:"7-9",note:"Main lift — follow weekly progression"},
+      {name:"Deadlift",sets:"see progression",rpe:"7-9",note:"Main lift — follow weekly progression. Alternate conventional/sumo if desired."},
+      {name:"Bulgarian Split Squats",sets:"3×8 each",rpe:"7-8",note:"DB in each hand. Great for single-leg stability (helps the running too)."},
+      {name:"Romanian Deadlift",sets:"3×10",rpe:"7",note:"Slow eccentric. Feel the hamstrings."},
+      {name:"Barbell Walking Lunges",sets:"3×10 each",rpe:"7-8",note:"Barbell on back. Long stride, knee tracks over toe. Great for single-leg strength."},
+      {name:"Back Extensions",sets:"3×15",rpe:"7",note:"On back extension bench. Hold plate to chest to add load. Builds lower back endurance for deadlifts."},
+      {name:"Calf Raises",sets:"4×15",rpe:"8",note:"Barbell on back or DB in hands, off a plate for ROM. Slow eccentric — helps peroneal tendon recovery."},
+    ]
+  },
+  upper_pull: {
+    name:"Upper Pull",icon:"\u{1F3CB}",color:C.purple,
+    mainLift:"Pull-ups",
+    warmup:"5 min cardio + band pull-aparts + dead hangs (30s)",
+    exercises:[
+      {name:"Pull-ups",sets:"see progression",rpe:"8-9",note:"Main lift — follow the pull-up progression scheme"},
+      {name:"Barbell Row",sets:"4×8",rpe:"7-8",note:"Strict form. No body english."},
+      {name:"Banded Face Pulls",sets:"3×20",rpe:"6-7",note:"Anchor band to rack at face height. External rotation at top. Shoulder health essential."},
+      {name:"Hammer Curls",sets:"3×12",rpe:"7",note:"25-35 lb DBs. Alternate arms or together. Builds brachialis for pull-up strength."},
+      {name:"Barbell Curl",sets:"3×10",rpe:"7",note:"Barbell or alternating DB curls. Controlled, no swinging."},
+      {name:"Farmer's Walks",sets:"3×40yd",rpe:"8",note:"45 lb DBs in each hand. Grip strength + core. Walk slow and controlled."},
+    ]
+  },
+};
+
+// 12-week periodization: 3 blocks of 4 weeks (3 build + 1 deload)
+// Percentages based on target maxes for progressive overload toward goals
+function getBenchScheme(week) {
+  // Target: 225. Training max starts ~200, progresses to ~215
+  var tm = week<=4?200:week<=8?208:215;
+  return getScheme(week,tm);
+}
+function getSquatScheme(week) {
+  // Target: 315. Training max starts ~280, progresses to ~300
+  var tm = week<=4?280:week<=8?290:300;
+  return getScheme(week,tm);
+}
+function getDeadliftScheme(week) {
+  // Target: 405. Training max starts ~340, progresses to ~370
+  var tm = week<=4?340:week<=8?355:370;
+  return getScheme(week,tm);
+}
+function getScheme(week,tm) {
+  var wk = ((week-1)%4)+1; // 1-4 within block
+  if(wk===1) return {label:"5×5 @ "+Math.round(tm*0.75)+" lbs",detail:"5 sets of 5 reps at 75% TM. Build volume.",pct:75};
+  if(wk===2) return {label:"4×4 @ "+Math.round(tm*0.80)+" lbs",detail:"4 sets of 4 reps at 80% TM. Moderate intensity.",pct:80};
+  if(wk===3) return {label:"5×3 @ "+Math.round(tm*0.85)+" lbs + AMRAP",detail:"4 sets of 3 at 85% TM, then 1 AMRAP set. Push the last set.",pct:85};
+  return {label:"3×5 @ "+Math.round(tm*0.65)+" lbs (deload)",detail:"Deload week. Light weight, focus on form. Recover.",pct:65};
+}
+
+function getPullupScheme(week) {
+  // Progressive overload: increase total volume, add weighted sets
+  var wk = ((week-1)%4)+1;
+  if(week<=4) {
+    if(wk===4) return {label:"3×12 bodyweight (deload)",detail:"Easy week. Focus on smooth reps."};
+    return {label:(3+wk)+"×max BW + 3×8 weighted (+10 lbs)",detail:"Do "+(3+wk)+" max sets bodyweight (rest 2 min between), then 3 weighted sets. Target total reps: "+(60+week*5)+"+"};
+  }
+  if(week<=8) {
+    if(wk===4) return {label:"3×15 bodyweight (deload)",detail:"Easy week."};
+    return {label:(4+wk)+"×max BW + 3×6 weighted (+15 lbs)",detail:"Volume is climbing. "+(4+wk)+" max sets bodyweight, then 3 weighted sets at +15 lbs. Target: "+(80+week*3)+"+ total."};
+  }
+  if(wk===4) return {label:"3×15 bodyweight (deload)",detail:"Light week before the final push."};
+  return {label:(5+wk)+"×max BW + 4×5 weighted (+20 lbs)",detail:"Peak pull-up volume. "+(5+wk)+" max BW sets, 4 weighted sets. You should be approaching 25+ unbroken by now."};
+}
+
+// Running: gradual ramp from ~12 mi/wk to ~20 mi/wk over 12 weeks
+// 3 runs/week, capped for tendonitis management
+var RUN_PLANS = [
+  // Wk 1-4: Conservative base
+  {mi:12,runs:[{day:"Tue",desc:"3 mi easy (10:30+ pace)",miles:3,detail:"Easy effort. If any foot pain, stop and walk. This is diagnostic running — we're testing, not training."},
+    {day:"Thu",desc:"3 mi easy",miles:3,detail:"Same easy effort. Flat route preferred — minimize lateral foot stress."},
+    {day:"Sat",desc:"6 mi easy long",miles:6,detail:"Your current pain-free cap. Run by effort, not pace. Walk breaks are fine."}]},
+  {mi:13,runs:[{day:"Tue",desc:"3 mi easy",miles:3,detail:"Consistency over intensity. Easy pace."},
+    {day:"Thu",desc:"4 mi easy",miles:4,detail:"Small bump. Monitor the foot during and 24 hours after."},
+    {day:"Sat",desc:"6 mi easy long",miles:6,detail:"Hold steady at 6. If last week's 6 felt easy, great — we're building resilience, not chasing distance yet."}]},
+  {mi:14,runs:[{day:"Tue",desc:"4 mi easy",miles:4,detail:"If the foot has been pain-free, we add a mile here."},
+    {day:"Thu",desc:"4 mi easy",miles:4,detail:"Flat, even surface. Trail or track if available."},
+    {day:"Sat",desc:"6 mi easy long",miles:6,detail:"Third week at 6. This should feel routine now."}]},
+  {mi:12,runs:[{day:"Tue",desc:"3 mi easy",miles:3,detail:"Cutback week — matches the lifting deload. Let everything recover."},
+    {day:"Thu",desc:"3 mi easy",miles:3,detail:"Light and easy."},
+    {day:"Sat",desc:"6 mi easy",miles:6,detail:"Hold the long run. Easy effort."}]},
+  // Wk 5-8: Building
+  {mi:16,runs:[{day:"Tue",desc:"4 mi easy",miles:4,detail:"New block. Foot should be feeling solid. If not, hold at previous volume."},
+    {day:"Thu",desc:"4 mi w/ 4×30s strides",miles:4,detail:"Easy run with 4 stride-outs (30 seconds at ~8:30 pace, full recovery). Reintroduce faster running."},
+    {day:"Sat",desc:"8 mi easy long",miles:8,detail:"First bump past 6. Bring water. Fuel if you want to practice. Go easy."}]},
+  {mi:17,runs:[{day:"Tue",desc:"4 mi easy",miles:4,detail:"Steady easy effort."},
+    {day:"Thu",desc:"5 mi w/ 6×30s strides",miles:5,detail:"Easy + strides. Building leg speed without heavy impact."},
+    {day:"Sat",desc:"8 mi easy long",miles:8,detail:"Second week at 8. Should feel manageable."}]},
+  {mi:18,runs:[{day:"Tue",desc:"4 mi easy",miles:4,detail:"Consistency is everything at this stage."},
+    {day:"Thu",desc:"5 mi w/ 2 mi tempo (9:15 pace)",miles:5,detail:"First tempo in a while. 1.5 easy, 2 mi at comfortably hard, 1.5 easy. Test the engine."},
+    {day:"Sat",desc:"9 mi easy long",miles:9,detail:"Inching up. You're getting close to half marathon long-run territory again."}]},
+  {mi:14,runs:[{day:"Tue",desc:"3 mi easy",miles:3,detail:"Deload week."},
+    {day:"Thu",desc:"4 mi easy",miles:4,detail:"Light effort."},
+    {day:"Sat",desc:"7 mi easy",miles:7,detail:"Slight pullback on the long run. Recover for the final push."}]},
+  // Wk 9-12: Peak running base
+  {mi:20,runs:[{day:"Tue",desc:"5 mi easy",miles:5,detail:"Building toward marathon base. This volume will feel normal soon."},
+    {day:"Thu",desc:"5 mi w/ 3 mi tempo (9:10 pace)",miles:5,detail:"Longer tempo. Building lactate threshold."},
+    {day:"Sat",desc:"10 mi easy long",miles:10,detail:"Double digits. Fuel at mile 5. You're back."}]},
+  {mi:21,runs:[{day:"Tue",desc:"5 mi easy",miles:5,detail:"Steady state."},
+    {day:"Thu",desc:"6 mi w/ 3 mi tempo (9:05 pace)",miles:6,detail:"Tempo getting longer and slightly faster."},
+    {day:"Sat",desc:"10 mi easy long",miles:10,detail:"Hold at 10. Build confidence at this distance."}]},
+  {mi:22,runs:[{day:"Tue",desc:"5 mi easy",miles:5,detail:"Almost at the end of Phase 1."},
+    {day:"Thu",desc:"6 mi w/ 4 mi tempo (9:00 pace)",miles:6,detail:"4-mile tempo at marathon pace. This is a legit workout now."},
+    {day:"Sat",desc:"11 mi easy long",miles:11,detail:"Push past your previous 11.8 wall — this time fueled and healthy. Redemption run."}]},
+  {mi:16,runs:[{day:"Tue",desc:"4 mi easy",miles:4,detail:"Final deload before Phase 2 (marathon build). You did it."},
+    {day:"Thu",desc:"4 mi easy w/ strides",miles:4,detail:"Light and fast."},
+    {day:"Sat",desc:"8 mi easy",miles:8,detail:"Easy finish to Phase 1. Assess: foot health, lifting PRs, running fitness. Time to plan Phase 2."}]},
 ];
 
-const FUELING = { title:"Nutrition & Fueling Protocol", sections:[
-  { name:"During Long Runs (>60 min)", items:["30–60g carbs per hour after the first 45 minutes","Options: energy gels (GU, Maurten, SiS), chews (Clif Bloks), or even gummy bears","Wash down each gel with 4–6 oz of water — not sports drink (double sugar = GI distress)","Practice every long run. Never try new fuel on race day."]},
-  { name:"Pre-Run (60–90 min before)", items:["200–300 calories of easy-to-digest carbs: toast w/ honey, banana, oatmeal, rice cake","8–12 oz water. Small amount of coffee is fine if you're used to it.","Avoid high fiber, fat, or protein close to run time."]},
-  { name:"Daily Nutrition", items:["Carbs are your fuel: 3–5g/kg bodyweight on easy days, 5–7g/kg on hard/long days","Protein: 1.4–1.7g/kg for recovery and muscle maintenance","Don't skimp on sodium — you lose 500–1500mg per hour of running in heat","Hydrate to thirst. Aim for pale yellow urine as a general gauge."]},
-  { name:"Race Week Carb Load", items:["3 days out: increase carbs to 7–10g/kg bodyweight per day","This is not just 'eat pasta' — it's rice, bread, potatoes, juice, pretzels all day","Reduce fiber and fat to make room for carbs without overeating total volume","Pre-race dinner: familiar, carb-heavy, low-fiber. White rice + chicken is a classic."]},
-]};
-
-const RACE_STRATEGY = { title:"Race Day Execution Plan",
-  paces:[
-    { segment:"Miles 1–6", pace:"9:15–9:20", note:"Bank patience, not time. The first 10K should feel too easy." },
-    { segment:"Miles 7–13", pace:"9:00–9:10", note:"Settle into marathon pace. You should feel strong and controlled." },
-    { segment:"Miles 14–20", pace:"9:00–9:10", note:"Maintain. This is where the race begins. Stay mentally engaged." },
-    { segment:"Miles 21–26.2", pace:"8:50–9:10", note:"If you have gas, use it. If you're surviving, hold pace." },
-  ],
-  fuel:"Gel or chews at miles 4, 8, 12, 16, 20, 23. Water at every aid station. Sports drink alternating with water."
-};
-
-const TC = { Easy:{bg:"#E8F5E9",text:"#2E7D32",border:"#A5D6A7"}, Tempo:{bg:"#FFF3E0",text:"#E65100",border:"#FFCC02"}, Intervals:{bg:"#FCE4EC",text:"#C62828",border:"#EF9A9A"}, "Long Run":{bg:"#E3F2FD",text:"#1565C0",border:"#90CAF9"}, "Rest/Lift":{bg:"#F3E5F5",text:"#6A1B9A",border:"#CE93D8"}, Rest:{bg:"#ECEFF1",text:"#546E7A",border:"#B0BEC5"}, Race:{bg:"#FFF9C4",text:"#F57F17",border:"#FFF176"} };
-const PC = { "Base Building":"#4CAF50", "Build Phase":"#FF9800", "Peak Phase":"#F44336", Taper:"#2196F3", "Race Week":"#FFC107" };
+function getWeekPlan(weekIdx) {
+  var w = weekIdx;
+  var blockWk = ((w)%4)+1;
+  var block = w<4?1:w<8?2:3;
+  var phase = blockWk===4?"Deload":block===1?"Foundation":block===2?"Build":block===3?"Peak":"";
+  var rp = RUN_PLANS[w];
+  var days = [
+    {day:"Mon",type:"lift",liftType:"upper_push",desc:LIFT_DAYS.upper_push.name,detail:""},
+    rp.runs[0], // Tue run
+    {day:"Wed",type:"lift",liftType:"lower",desc:LIFT_DAYS.lower.name,detail:""},
+    rp.runs[1], // Thu run
+    {day:"Fri",type:"lift",liftType:"upper_pull",desc:LIFT_DAYS.upper_pull.name,detail:""},
+    rp.runs[2], // Sat run
+  ];
+  return {week:w+1,phase:phase,block:block,runMiles:rp.mi,days:days};
+}
 
 // ─── STORAGE ─────────────────────────────────────────────────────────
-const store = {
-  get() { try { return JSON.parse(localStorage.getItem("marathon-logs") || "{}"); } catch(e) { return {}; } },
-  set(logs) { try { localStorage.setItem("marathon-logs", JSON.stringify(logs)); } catch(e) {} },
-  clear() { try { localStorage.removeItem("marathon-logs"); } catch(e) {} },
+var ST={
+  get:function(){try{return JSON.parse(localStorage.getItem("training-v2")||"{}")}catch(e){return{}}},
+  set:function(d){try{localStorage.setItem("training-v2",JSON.stringify(d))}catch(e){}},
+  clear:function(){try{localStorage.removeItem("training-v2")}catch(e){}}
 };
 
-// ─── LOG FORM ────────────────────────────────────────────────────────
-function LogForm({ existing, onSave, onCancel, onDelete }) {
-  const [dist, setDist] = useState(existing ? existing.distance : "");
-  const [pace, setPace] = useState(existing ? existing.pace : "");
-  const [effort, setEffort] = useState(existing ? existing.effort : "moderate");
-  const [notes, setNotes] = useState(existing ? existing.notes : "");
-
-  const inp = { width:"100%", padding:"8px 10px", fontSize:13, border:"1px solid #ddd", borderRadius:6, boxSizing:"border-box", background:"#fafafa" };
-  const lbl = { fontSize:11, fontWeight:600, color:"#888", marginBottom:4, display:"block", textTransform:"uppercase", letterSpacing:0.8 };
-
-  return h("div", { style:{ marginTop:12, paddingTop:12, borderTop:"1px dashed #ddd" }, onClick:function(e){e.stopPropagation()} },
-    h("div", { style:{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 } },
-      h("div", null, h("label", { style:lbl }, "Distance (mi)"), h("input", { type:"number", step:"0.1", placeholder:"0.0", value:dist, onChange:function(e){setDist(e.target.value)}, style:inp })),
-      h("div", null, h("label", { style:lbl }, "Avg Pace (min/mi)"), h("input", { type:"text", placeholder:"9:27", value:pace, onChange:function(e){setPace(e.target.value)}, style:inp })),
+// ─── COMPONENTS ──────────────────────────────────────────────────────
+function LogForm(p) {
+  var ex=p.existing;
+  var s=useState,d=s(ex?ex.distance:""),dist=d[0],setDist=d[1];
+  var pc=s(ex?ex.pace:""),pace=pc[0],setPace=pc[1];
+  var ef=s(ex?ex.effort:"moderate"),effort=ef[0],setEff=ef[1];
+  var nt=s(ex?ex.notes:""),notes=nt[0],setNotes=nt[1];
+  var inp={width:"100%",padding:"8px 10px",fontSize:13,border:"1px solid "+C.borderLight,borderRadius:6,background:"#111",color:C.text,boxSizing:"border-box"};
+  var lbl={fontSize:10,fontWeight:700,color:C.textMuted,marginBottom:4,display:"block",textTransform:"uppercase",letterSpacing:1};
+  return h("div",{style:{marginTop:12,paddingTop:12,borderTop:"1px dashed "+C.borderLight},onClick:function(e){e.stopPropagation()}},
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}},
+      h("div",null,h("label",{style:lbl},"Distance (mi)"),h("input",{type:"number",step:"0.1",placeholder:"0.0",value:dist,onChange:function(e){setDist(e.target.value)},style:inp})),
+      h("div",null,h("label",{style:lbl},"Avg Pace / Weight"),h("input",{type:"text",placeholder:"9:27 or 205 lbs",value:pace,onChange:function(e){setPace(e.target.value)},style:inp}))
     ),
-    h("div", { style:{ marginBottom:10 } },
-      h("label", { style:lbl }, "Effort"),
-      h("div", { style:{ display:"flex", gap:6 } },
-        ["easy","moderate","hard","max"].map(function(e) {
-          return h("button", { key:e, onClick:function(){setEffort(e)}, style:{ flex:1, padding:"6px 0", fontSize:11, fontWeight:effort===e?700:500, border:effort===e?"2px solid #1a1a1a":"1px solid #ddd", borderRadius:5, background:effort===e?"#1a1a1a":"#fff", color:effort===e?"#fff":"#666", textTransform:"capitalize" } }, e);
+    h("div",{style:{marginBottom:10}},
+      h("label",{style:lbl},"Effort"),
+      h("div",{style:{display:"flex",gap:6}},
+        ["easy","moderate","hard","max"].map(function(e){
+          return h("button",{key:e,onClick:function(){setEff(e)},style:{flex:1,padding:"6px 0",fontSize:11,fontWeight:effort===e?700:500,border:effort===e?"2px solid "+C.accent:"1px solid "+C.borderLight,borderRadius:5,background:effort===e?C.accent:"transparent",color:effort===e?"#111":C.textMuted,textTransform:"capitalize"}},e);
         })
       )
     ),
-    h("div", { style:{ marginBottom:12 } },
-      h("label", { style:lbl }, "Notes"),
-      h("textarea", { placeholder:"How did it feel?", value:notes, onChange:function(e){setNotes(e.target.value)}, style:Object.assign({}, inp, { minHeight:56, resize:"vertical" }) })
-    ),
-    h("div", { style:{ display:"flex", gap:8 } },
-      h("button", { onClick:function(){ onSave({ distance:parseFloat(dist)||0, pace:pace, effort:effort, notes:notes, completedAt:existing?existing.completedAt:new Date().toISOString() }) }, style:{ flex:1, padding:"9px 0", fontSize:13, fontWeight:700, background:"#2E7D32", color:"#fff", border:"none", borderRadius:6 } }, existing ? "Update" : "Log Workout"),
-      existing ? h("button", { onClick:onDelete, style:{ padding:"9px 14px", fontSize:13, fontWeight:600, background:"#fff", color:"#C62828", border:"1px solid #EF9A9A", borderRadius:6 } }, "Remove") : null,
-      h("button", { onClick:onCancel, style:{ padding:"9px 14px", fontSize:13, fontWeight:500, background:"#f5f5f5", color:"#666", border:"none", borderRadius:6 } }, "Cancel")
+    h("div",{style:{marginBottom:12}},h("label",{style:lbl},"Notes"),h("textarea",{placeholder:"How did it feel?",value:notes,onChange:function(e){setNotes(e.target.value)},style:Object.assign({},inp,{minHeight:56,resize:"vertical"})})),
+    h("div",{style:{display:"flex",gap:8}},
+      h("button",{onClick:function(){p.onSave({distance:parseFloat(dist)||0,pace:pace,effort:effort,notes:notes,completedAt:ex?ex.completedAt:new Date().toISOString()})},style:{flex:1,padding:"9px 0",fontSize:13,fontWeight:700,background:C.accent,color:"#111",border:"none",borderRadius:6}},ex?"Update":"Log Workout"),
+      ex?h("button",{onClick:p.onDelete,style:{padding:"9px 14px",fontSize:13,fontWeight:600,background:"transparent",color:C.red,border:"1px solid "+C.redDim,borderRadius:6}},"Remove"):null,
+      h("button",{onClick:p.onCancel,style:{padding:"9px 14px",fontSize:13,fontWeight:500,background:C.card,color:C.textMuted,border:"none",borderRadius:6}},"Cancel")
+    )
+  );
+}
+
+function LiftDetail(p) {
+  var lt=LIFT_DAYS[p.liftType];
+  var week=p.week;
+  var mainScheme=null;
+  if(p.liftType==="upper_push") mainScheme={bench:getBenchScheme(week)};
+  else if(p.liftType==="lower") mainScheme={squat:getSquatScheme(week),deadlift:getDeadliftScheme(week)};
+  else if(p.liftType==="upper_pull") mainScheme={pullups:getPullupScheme(week)};
+
+  return h("div",{style:{fontSize:13,lineHeight:1.6,color:C.textMuted}},
+    h("div",{style:{fontSize:11,fontWeight:700,color:C.accent,textTransform:"uppercase",letterSpacing:1,marginBottom:8}},"Warmup"),
+    h("div",{style:{marginBottom:12,color:"#999"}},lt.warmup),
+    h("div",{style:{fontSize:11,fontWeight:700,color:C.accent,textTransform:"uppercase",letterSpacing:1,marginBottom:8}},"Exercises"),
+    lt.exercises.map(function(ex,i){
+      var isMain=ex.name==="Bench Press"||ex.name==="Back Squat"||ex.name==="Deadlift"||ex.name==="Pull-ups";
+      var scheme=null;
+      if(ex.name==="Bench Press"&&mainScheme) scheme=mainScheme.bench;
+      if(ex.name==="Back Squat"&&mainScheme) scheme=mainScheme.squat;
+      if(ex.name==="Deadlift"&&mainScheme) scheme=mainScheme.deadlift;
+      if(ex.name==="Pull-ups"&&mainScheme) scheme=mainScheme.pullups;
+      return h("div",{key:i,style:{padding:"8px 0",borderBottom:i<lt.exercises.length-1?"1px solid "+C.border:"none"}},
+        h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center"}},
+          h("span",{style:{fontWeight:isMain?700:500,color:isMain?C.text:C.textMuted}},ex.name),
+          h("span",{style:{fontFamily:C.mono,fontSize:11,color:isMain?lt.color:C.textDim}},scheme?scheme.label:ex.sets)
+        ),
+        scheme?h("div",{style:{fontSize:12,color:lt.color,marginTop:2,opacity:0.8}},scheme.detail):null,
+        h("div",{style:{fontSize:11,color:C.textDim,marginTop:2}},ex.note)
+      );
+    })
+  );
+}
+
+function StrengthGoals() {
+  var goals=[
+    {name:"Bench",current:190,target:225,color:C.blue},
+    {name:"Squat",current:250,target:315,color:C.orange},
+    {name:"Deadlift",current:285,target:405,color:C.red},
+    {name:"Pull-ups",current:20,target:30,color:C.purple,unit:"reps"},
+  ];
+  return h("div",{style:{marginBottom:20}},
+    h("div",{style:{fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",color:C.textDim,marginBottom:10}},"Strength Targets"),
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}},
+      goals.map(function(g){
+        var pct=Math.round(((g.current-0)/(g.target-0))*100);
+        var unit=g.unit||"lbs";
+        return h("div",{key:g.name,style:{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:"10px 12px"}},
+          h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}},
+            h("span",{style:{fontSize:12,fontWeight:700,color:C.text}},g.name),
+            h("span",{style:{fontSize:11,fontFamily:C.mono,color:g.color}},g.target+" "+unit)
+          ),
+          h("div",{style:{height:4,background:C.border,borderRadius:2,overflow:"hidden"}},
+            h("div",{style:{height:"100%",width:pct+"%",background:g.color,borderRadius:2,transition:"width 0.3s"}})
+          ),
+          h("div",{style:{fontSize:10,color:C.textDim,marginTop:4,fontFamily:C.mono}},"Current: "+g.current+" "+unit+" ("+pct+"%)")
+        );
+      })
     )
   );
 }
 
 // ─── MAIN APP ────────────────────────────────────────────────────────
 function App() {
-  const [selWeek, setSelWeek] = useState(0);
-  const [tab, setTab] = useState("plan");
-  const [expDay, setExpDay] = useState(null);
-  const [logDay, setLogDay] = useState(null);
-  const [logs, setLogs] = useState(store.get());
+  var s=useState;
+  var sw=s(0),selWeek=sw[0],setSelWeek=sw[1];
+  var st=s("plan"),tab=st[0],setTab=st[1];
+  var se=s(null),expDay=se[0],setExpDay=se[1];
+  var sl=s(null),logDay=sl[0],setLogDay=sl[1];
+  var lg=s(ST.get()),logs=lg[0],setLogs=lg[1];
 
-  var save = function(n) { setLogs(n); store.set(n); };
-  var lk = function(w,d) { return "w"+w+"-d"+d; };
-  var doSave = function(wi,di,data) { var n = Object.assign({}, logs); n[lk(wi,di)] = data; save(n); setLogDay(null); };
-  var doDelete = function(wi,di) { var n = Object.assign({}, logs); delete n[lk(wi,di)]; save(n); setLogDay(null); };
-  var doReset = function() { if(confirm("Clear all workout logs? This can't be undone.")) { setLogs({}); store.clear(); } };
+  var save=function(n){setLogs(n);ST.set(n)};
+  var lk=function(w,d){return "w"+w+"-d"+d};
+  var doSave=function(wi,di,data){var n=Object.assign({},logs);n[lk(wi,di)]=data;save(n);setLogDay(null)};
+  var doDelete=function(wi,di){var n=Object.assign({},logs);delete n[lk(wi,di)];save(n);setLogDay(null)};
+  var doReset=function(){if(confirm("Clear all workout logs?")){setLogs({});ST.clear()}};
 
-  var week = WEEKS[selWeek];
-  var totalLogged = Object.keys(logs).length;
-  var totalPlanned = WEEKS.reduce(function(a,w){return a+w.days.length},0);
-  var totalMi = Object.values(logs).reduce(function(a,l){return a+(l.distance||0)},0);
-  var weekDone = week.days.filter(function(_,i){return !!logs[lk(selWeek,i)]}).length;
+  var week=getWeekPlan(selWeek);
+  var totalLogged=Object.keys(logs).length;
+  var totalPlanned=12*6;
+  var totalMi=Object.values(logs).reduce(function(a,l){return a+(l.distance||0)},0);
+  var weekDone=week.days.filter(function(_,i){return !!logs[lk(selWeek,i)]}).length;
 
-  return h("div", null,
+  var typeColors={lift:{bg:"#1a1520",text:C.purple,border:C.purpleDim},run:{bg:"#0d2818",text:C.green,border:C.greenDim}};
+
+  return h("div",null,
     // Header
-    h("div", { style:{ marginBottom:24 } },
-      h("div", { style:{ fontSize:11, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", color:"#999", marginBottom:4 } }, "10-Week Program"),
-      h("h1", { style:{ fontSize:28, fontWeight:900, margin:0, lineHeight:1.1 } }, "Sub-4:00 Marathon"),
-      h("div", { style:{ fontSize:14, color:"#666", marginTop:6 } }, "Target pace: 9:09/mi \u2022 Peak mileage: 44 mi/wk \u2022 5 runs/wk"),
-      totalLogged > 0 ? h("div", { style:{ display:"flex", gap:16, marginTop:10, fontSize:12, color:"#888" } },
-        h("span", null, h("strong", { style:{color:"#2E7D32"} }, totalLogged), " logged"),
-        h("span", null, h("strong", { style:{color:"#1565C0"} }, totalMi.toFixed(1)), " mi run"),
-        h("span", null, h("strong", { style:{color:"#E65100"} }, Math.round((totalLogged/totalPlanned)*100)+"%"), " complete"),
-      ) : null
+    h("div",{style:{marginBottom:20}},
+      h("div",{style:{fontSize:10,fontWeight:700,letterSpacing:3,textTransform:"uppercase",color:C.textDim,marginBottom:4,fontFamily:C.mono}},"Phase 1 \u2022 12 Weeks"),
+      h("h1",{style:{fontSize:26,fontWeight:900,margin:0,lineHeight:1.1,color:C.text}},"Strength + Base"),
+      h("div",{style:{fontSize:13,color:C.textMuted,marginTop:6}},"3 lift days \u2022 3 run days \u2022 Sundays off"),
+      totalLogged>0?h("div",{style:{display:"flex",gap:16,marginTop:8,fontSize:11,fontFamily:C.mono,color:C.textDim}},
+        h("span",null,h("span",{style:{color:C.accent}},totalLogged)," logged"),
+        h("span",null,h("span",{style:{color:C.green}},totalMi.toFixed(1))," mi run"),
+        h("span",null,h("span",{style:{color:C.blue}},Math.round((totalLogged/totalPlanned)*100)+"%")," done")
+      ):null
     ),
 
+    // Strength goals
+    tab==="plan"?h(StrengthGoals):null,
+
     // Tabs
-    h("div", { style:{ display:"flex", gap:0, marginBottom:20, borderBottom:"2px solid #e0e0e0" } },
-      [{id:"plan",label:"Training Plan"},{id:"fuel",label:"Fueling"},{id:"race",label:"Race Strategy"}].map(function(t) {
-        return h("button", { key:t.id, onClick:function(){setTab(t.id)}, style:{ padding:"10px 20px", fontSize:13, fontWeight:tab===t.id?700:500, color:tab===t.id?"#1a1a1a":"#888", background:"none", border:"none", borderBottom:tab===t.id?"2px solid #1a1a1a":"2px solid transparent", marginBottom:-2 } }, t.label);
+    h("div",{style:{display:"flex",gap:0,marginBottom:16,borderBottom:"1px solid "+C.border}},
+      [{id:"plan",label:"Weekly Plan"},{id:"tendon",label:"Foot Care"},{id:"phase2",label:"Phase 2 Preview"}].map(function(t){
+        return h("button",{key:t.id,onClick:function(){setTab(t.id)},style:{padding:"10px 16px",fontSize:12,fontWeight:tab===t.id?700:500,color:tab===t.id?C.accent:C.textDim,background:"none",border:"none",borderBottom:tab===t.id?"2px solid "+C.accent:"2px solid transparent",marginBottom:-1,letterSpacing:0.5}},t.label);
       })
     ),
 
     // PLAN TAB
-    tab === "plan" ? h("div", null,
+    tab==="plan"?h("div",null,
       // Week selector
-      h("div", { style:{ display:"flex", gap:4, marginBottom:16, flexWrap:"wrap" } },
-        WEEKS.map(function(w,i) {
-          var wd = w.days.filter(function(_,di){return !!logs[lk(i,di)]}).length;
-          var all = wd === w.days.length;
-          return h("button", { key:i, onClick:function(){setSelWeek(i);setExpDay(null);setLogDay(null)}, style:{ width:56, padding:"8px 4px", fontSize:11, fontWeight:selWeek===i?700:500, background:selWeek===i?"#1a1a1a":all?"#E8F5E9":"#f5f5f5", color:selWeek===i?"#fff":all?"#2E7D32":"#666", border:all&&selWeek!==i?"1px solid #A5D6A7":"1px solid transparent", borderRadius:6, textAlign:"center", lineHeight:1.3, transition:"all 0.15s" } },
-            h("div", null, "Wk "+w.week),
-            h("div", { style:{fontSize:10,opacity:0.7} }, wd>0?(wd+"/7"):(w.totalMiles+" mi"))
+      h("div",{style:{display:"flex",gap:3,marginBottom:14,flexWrap:"wrap"}},
+        Array.from({length:12}).map(function(_,i){
+          var wp=getWeekPlan(i);
+          var wd=wp.days.filter(function(_2,di){return !!logs[lk(i,di)]}).length;
+          var all=wd===6;
+          var isDeload=wp.phase==="Deload";
+          return h("button",{key:i,onClick:function(){setSelWeek(i);setExpDay(null);setLogDay(null)},style:{
+            flex:"1 0 auto",minWidth:50,padding:"7px 4px",fontSize:10,fontWeight:selWeek===i?700:500,
+            background:selWeek===i?C.accent:all?C.greenBg:C.card,
+            color:selWeek===i?"#111":all?C.green:isDeload?C.textDim:C.textMuted,
+            border:"1px solid "+(selWeek===i?C.accent:all?C.greenDim:C.border),
+            borderRadius:5,textAlign:"center",lineHeight:1.3,transition:"all 0.15s",fontFamily:C.mono
+          }},
+            h("div",null,"W"+wp.week),
+            h("div",{style:{fontSize:9,opacity:0.7}},wd>0?(wd+"/6"):isDeload?"DL":(wp.runMiles+"mi"))
           );
         })
       ),
+
       // Week header
-      h("div", { style:{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:12 } },
-        h("div", null,
-          h("span", { style:{fontSize:18,fontWeight:700} }, "Week "+week.week),
-          h("span", { style:{ fontSize:11, fontWeight:600, color:PC[week.phase], marginLeft:10, padding:"3px 8px", background:PC[week.phase]+"18", borderRadius:4 } }, week.phase)
+      h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}},
+        h("div",null,
+          h("span",{style:{fontSize:17,fontWeight:700,color:C.text}},"Week "+week.week),
+          h("span",{style:{fontSize:10,fontWeight:600,color:week.phase==="Deload"?C.accent:week.block===1?C.green:week.block===2?C.blue:C.red,marginLeft:10,padding:"2px 8px",background:week.phase==="Deload"?C.accentDim+"30":week.block===1?C.greenDim+"40":week.block===2?C.blueDim+"40":C.redDim+"40",borderRadius:4,fontFamily:C.mono}},week.phase)
         ),
-        h("div", { style:{fontSize:13,color:"#888"} }, h("strong", null, weekDone+"/7"), " done \u2022 ", h("strong", {style:{color:"#666"}}, week.totalMiles+" mi"))
+        h("div",{style:{fontSize:12,color:C.textDim,fontFamily:C.mono}},weekDone+"/6 \u2022 "+week.runMiles+" mi")
       ),
-      // Sparkline
-      h("div", { style:{ display:"flex", gap:3, alignItems:"flex-end", height:40, marginBottom:16 } },
-        WEEKS.map(function(w,i) {
-          var am = w.days.reduce(function(a,_,di){return a+(logs[lk(i,di)]?logs[lk(i,di)].distance||0:0)},0);
-          return h("div", { key:i, style:{ flex:1, height:(w.totalMiles/44*100)+"%", background:selWeek===i?"#1a1a1a":"#e0e0e0", borderRadius:2, transition:"all 0.2s", minHeight:4, position:"relative", overflow:"hidden" } },
-            am > 0 ? h("div", { style:{ position:"absolute", bottom:0, left:0, right:0, height:Math.min(am/w.totalMiles*100,100)+"%", background:selWeek===i?"#4CAF50":"#A5D6A7", borderRadius:2, transition:"all 0.3s" } }) : null
+
+      // Mileage sparkline
+      h("div",{style:{display:"flex",gap:2,alignItems:"flex-end",height:32,marginBottom:14}},
+        Array.from({length:12}).map(function(_,i){
+          var wp=getWeekPlan(i);
+          var am=wp.days.reduce(function(a,_2,di){var l=logs[lk(i,di)];return a+(l?l.distance||0:0)},0);
+          return h("div",{key:i,style:{flex:1,height:(wp.runMiles/22*100)+"%",background:selWeek===i?C.accent+"60":C.border,borderRadius:2,minHeight:3,position:"relative",overflow:"hidden"}},
+            am>0?h("div",{style:{position:"absolute",bottom:0,left:0,right:0,height:Math.min(am/wp.runMiles*100,100)+"%",background:selWeek===i?C.green:C.greenDim,borderRadius:2}}):null
           );
         })
       ),
+
       // Days
-      h("div", { style:{ display:"flex", flexDirection:"column", gap:6 } },
-        week.days.map(function(d,i) {
-          var colors = TC[d.type] || TC.Rest;
-          var isExp = expDay === i;
-          var isLog = logDay === i;
-          var log = logs[lk(selWeek,i)];
-          var done = !!log;
+      h("div",{style:{display:"flex",flexDirection:"column",gap:5}},
+        week.days.map(function(d,i){
+          var isLift=d.type==="lift";
+          var tc=isLift?typeColors.lift:typeColors.run;
+          var isExp=expDay===i;
+          var isLog=logDay===i;
+          var log=logs[lk(selWeek,i)];
+          var done=!!log;
+          var dayLabel=d.day||(isLift?"Lift":"Run");
 
-          return h("div", { key:i, style:{ background:done?"#FAFFF9":"#fff", border:"1px solid "+(done?"#C8E6C9":isExp?colors.border:"#e8e8e8"), borderRadius:8, padding:"12px 14px", transition:"all 0.15s", borderLeft:done?"3px solid #4CAF50":undefined } },
-            // Row
-            h("div", { onClick:function(){setExpDay(isExp?null:i);if(isLog)setLogDay(null)}, style:{ display:"flex", alignItems:"center", gap:10, cursor:"pointer" } },
+          return h("div",{key:i,style:{background:done?C.greenBg:C.card,border:"1px solid "+(done?C.greenDim:isExp?tc.border:C.border),borderRadius:8,padding:"11px 12px",transition:"all 0.15s",borderLeft:done?"3px solid "+C.green:undefined}},
+            h("div",{onClick:function(){setExpDay(isExp?null:i);if(isLog)setLogDay(null)},style:{display:"flex",alignItems:"center",gap:9,cursor:"pointer"}},
               done
-                ? h("div", { style:{ width:20,height:20,borderRadius:10,background:"#4CAF50",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 } }, h("span", { style:{color:"#fff",fontSize:12,lineHeight:1} }, "\u2713"))
-                : h("div", { style:{ width:20,height:20,borderRadius:10,border:"2px solid #ddd",flexShrink:0 } }),
-              h("div", { style:{width:30,fontSize:12,fontWeight:600,color:"#999"} }, d.day),
-              h("span", { style:{ fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:3,background:colors.bg,color:colors.text,letterSpacing:0.5,textTransform:"uppercase",flexShrink:0,opacity:done?0.7:1 } }, d.type),
-              h("div", { style:{fontSize:13,fontWeight:500,flex:1,color:done?"#555":"#1a1a1a"} }, d.desc),
-              d.miles > 0 ? h("div", { style:{fontSize:12,fontWeight:600,color:"#999",flexShrink:0} }, d.miles+" mi") : null
+                ?h("div",{style:{width:18,height:18,borderRadius:9,background:C.green,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}},h("span",{style:{color:"#111",fontSize:11,lineHeight:1,fontWeight:700}},"\u2713"))
+                :h("div",{style:{width:18,height:18,borderRadius:9,border:"2px solid "+C.borderLight,flexShrink:0}}),
+              h("div",{style:{width:28,fontSize:11,fontWeight:600,color:C.textDim,fontFamily:C.mono}},dayLabel),
+              h("span",{style:{fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:3,background:tc.bg,color:tc.text,letterSpacing:0.5,textTransform:"uppercase",flexShrink:0,border:"1px solid "+tc.border}},isLift?"LIFT":"RUN"),
+              h("div",{style:{fontSize:12,fontWeight:500,flex:1,color:done?"#999":C.text}},d.desc),
+              d.miles>0?h("div",{style:{fontSize:11,fontWeight:600,color:C.textDim,flexShrink:0,fontFamily:C.mono}},d.miles+"mi"):null
             ),
-            // Compact log preview
-            done && !isExp ? h("div", { style:{marginTop:6,marginLeft:30,display:"flex",gap:12,fontSize:11,color:"#888"} },
-              log.distance>0 ? h("span",null,log.distance+" mi") : null,
-              log.pace ? h("span",null,log.pace+"/mi") : null,
-              log.effort ? h("span",{style:{textTransform:"capitalize"}},log.effort) : null,
-              log.notes ? h("span",{style:{color:"#aaa",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},log.notes) : null
-            ) : null,
-            // Expanded detail
-            isExp ? h("div", { style:{marginTop:10,paddingTop:10,borderTop:"1px solid #f0f0f0"} },
-              h("div", { style:{fontSize:13,lineHeight:1.6,color:"#555",marginBottom:10} }, d.detail),
-              done && !isLog ? h("div", { style:{background:"#f8f9f8",borderRadius:6,padding:10,marginBottom:10} },
-                h("div", { style:{fontSize:11,fontWeight:700,color:"#2E7D32",marginBottom:6,textTransform:"uppercase",letterSpacing:0.8} }, "Workout Log"),
-                h("div", { style:{display:"flex",gap:16,fontSize:13,color:"#555",flexWrap:"wrap"} },
-                  log.distance>0?h("div",null,h("strong",null,log.distance)," mi"):null,
-                  log.pace?h("div",null,h("strong",null,log.pace),"/mi"):null,
-                  log.effort?h("div",{style:{textTransform:"capitalize"}},"Effort: ",h("strong",null,log.effort)):null
+            done&&!isExp?h("div",{style:{marginTop:5,marginLeft:28,display:"flex",gap:10,fontSize:10,color:C.textDim,fontFamily:C.mono}},
+              log.distance>0?h("span",null,log.distance+"mi"):null,
+              log.pace?h("span",null,log.pace):null,
+              log.effort?h("span",{style:{textTransform:"capitalize"}},log.effort):null,
+              log.notes?h("span",{style:{color:C.textDim,maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},log.notes):null
+            ):null,
+            isExp?h("div",{style:{marginTop:10,paddingTop:10,borderTop:"1px solid "+C.border}},
+              isLift?h(LiftDetail,{liftType:d.liftType,week:week.week}):h("div",{style:{fontSize:13,lineHeight:1.6,color:C.textMuted}},d.detail),
+              done&&!isLog?h("div",{style:{background:"#0a1a10",borderRadius:6,padding:10,marginTop:10,marginBottom:10,border:"1px solid "+C.greenDim}},
+                h("div",{style:{fontSize:10,fontWeight:700,color:C.green,marginBottom:5,textTransform:"uppercase",letterSpacing:1,fontFamily:C.mono}},"Logged"),
+                h("div",{style:{display:"flex",gap:14,fontSize:12,color:C.textMuted,flexWrap:"wrap"}},
+                  log.distance>0?h("div",null,h("strong",{style:{color:C.text}},log.distance)," mi"):null,
+                  log.pace?h("div",null,h("strong",{style:{color:C.text}},log.pace)):null,
+                  log.effort?h("div",{style:{textTransform:"capitalize"}},"Effort: ",h("strong",{style:{color:C.text}},log.effort)):null
                 ),
-                log.notes?h("div",{style:{fontSize:13,color:"#666",marginTop:6,fontStyle:"italic"}},'"'+log.notes+'"'):null,
-                h("div",{style:{fontSize:10,color:"#bbb",marginTop:4}},new Date(log.completedAt).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}))
-              ) : null,
-              !isLog
-                ? h("button", { onClick:function(e){e.stopPropagation();setLogDay(i)}, style:{ padding:"8px 16px",fontSize:12,fontWeight:600,background:done?"#f5f5f5":"#1a1a1a",color:done?"#666":"#fff",border:done?"1px solid #ddd":"none",borderRadius:6 } }, done?"Edit Log":"Log Workout")
-                : h(LogForm, { existing:log, onSave:function(data){doSave(selWeek,i,data)}, onCancel:function(){setLogDay(null)}, onDelete:function(){doDelete(selWeek,i)} })
-            ) : null
+                log.notes?h("div",{style:{fontSize:12,color:"#888",marginTop:5,fontStyle:"italic"}},'"'+log.notes+'"'):null,
+                h("div",{style:{fontSize:9,color:C.textDim,marginTop:4,fontFamily:C.mono}},new Date(log.completedAt).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}))
+              ):null,
+              h("div",{style:{marginTop:8}},
+                !isLog
+                  ?h("button",{onClick:function(e){e.stopPropagation();setLogDay(i)},style:{padding:"7px 14px",fontSize:11,fontWeight:600,background:done?C.card:C.accent,color:done?C.textMuted:"#111",border:done?"1px solid "+C.borderLight:"none",borderRadius:5}},done?"Edit Log":"Log Workout")
+                  :h(LogForm,{existing:log,onSave:function(data){doSave(selWeek,i,data)},onCancel:function(){setLogDay(null)},onDelete:function(){doDelete(selWeek,i)}})
+              )
+            ):null
           );
         })
       ),
-      totalLogged>0 ? h("div",{style:{marginTop:20,textAlign:"right"}},h("button",{onClick:doReset,style:{fontSize:11,color:"#bbb",background:"none",border:"none",textDecoration:"underline"}},"Reset all logs")) : null
-    ) : null,
+      totalLogged>0?h("div",{style:{marginTop:16,textAlign:"right"}},h("button",{onClick:doReset,style:{fontSize:10,color:C.textDim,background:"none",border:"none",textDecoration:"underline"}},"Reset all logs")):null
+    ):null,
 
-    // FUELING TAB
-    tab === "fuel" ? h("div", null,
-      h("h2", { style:{fontSize:20,fontWeight:700,marginBottom:16} }, FUELING.title),
-      FUELING.sections.map(function(s,i) {
-        return h("div", { key:i, style:{marginBottom:20} },
-          h("h3", { style:{fontSize:14,fontWeight:700,marginBottom:8,color:"#333"} }, s.name),
-          s.items.map(function(item,j) {
-            return h("div", { key:j, style:{fontSize:13,lineHeight:1.6,color:"#555",paddingLeft:14,marginBottom:4,position:"relative"} },
-              h("span", { style:{position:"absolute",left:0,color:"#ccc"} }, "\u2022"), item
-            );
-          })
-        );
-      }),
-      h("div", { style:{marginTop:20,padding:14,background:"#FFF8E1",borderRadius:8,border:"1px solid #FFE082",fontSize:13,lineHeight:1.6,color:"#6D4C00"} },
-        h("strong", null, "Your 11.8-mile lesson:"), " You bonked because you ran 90+ minutes on just a glass of water. With proper fueling, that same effort gets you to 13.1 and beyond."
+    // TENDON TAB
+    tab==="tendon"?h("div",null,
+      h("h2",{style:{fontSize:18,fontWeight:700,marginBottom:14,color:C.text}},"Peroneal Tendonitis Management"),
+      h("div",{style:{fontSize:13,lineHeight:1.7,color:C.textMuted}},
+        h("p",{style:{marginBottom:12}},"The peroneal tendons run along the outside of your ankle and help stabilize your foot during running. Flare-ups typically come from too-rapid mileage increases, worn shoes, or running on cambered surfaces. Here\u2019s the protocol:"),
+
+        h("div",{style:{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:14,marginBottom:12}},
+          h("div",{style:{fontSize:11,fontWeight:700,color:C.accent,textTransform:"uppercase",letterSpacing:1,marginBottom:8,fontFamily:C.mono}},"Daily Rehab (5\u201310 min)"),
+          h("div",{style:{color:"#999"}},
+            "\u2022 Ankle circles: 20 each direction, each foot",h("br"),
+            "\u2022 Towel scrunches: 3\u00d730 seconds (strengthens intrinsic foot muscles)",h("br"),
+            "\u2022 Single-leg balance: 3\u00d730 seconds each foot (on pillow for challenge)",h("br"),
+            "\u2022 Resistance band eversion: 3\u00d715 each foot (key peroneal strengthener)",h("br"),
+            "\u2022 Eccentric calf raises off a step: 3\u00d715 (slow 3-sec lower)"
+          )
+        ),
+
+        h("div",{style:{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:14,marginBottom:12}},
+          h("div",{style:{fontSize:11,fontWeight:700,color:C.blue,textTransform:"uppercase",letterSpacing:1,marginBottom:8,fontFamily:C.mono}},"Pain Rules"),
+          h("div",{style:{color:"#999"}},
+            "\u2022 ",h("strong",{style:{color:C.text}},"0\u20132/10 during run")," \u2192 OK to continue",h("br"),
+            "\u2022 ",h("strong",{style:{color:C.accent}},"3\u20134/10 during run")," \u2192 Stop, walk home, ice",h("br"),
+            "\u2022 ",h("strong",{style:{color:C.red}},"Pain increases day after run")," \u2192 Take 2\u20133 days off running, keep doing rehab exercises",h("br"),
+            "\u2022 ",h("strong",{style:{color:C.red}},"Pain at rest or while walking")," \u2192 See a sports PT"
+          )
+        ),
+
+        h("div",{style:{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:14,marginBottom:12}},
+          h("div",{style:{fontSize:11,fontWeight:700,color:C.green,textTransform:"uppercase",letterSpacing:1,marginBottom:8,fontFamily:C.mono}},"Recovery Tools"),
+          h("div",{style:{color:"#999"}},
+            "\u2022 Ice the outer ankle for 15 min after every run",h("br"),
+            "\u2022 Roll the peroneal area with a lacrosse ball (lateral lower leg)",h("br"),
+            "\u2022 Consider a compression ankle sleeve for runs",h("br"),
+            "\u2022 Check shoe wear \u2014 if >400 miles, replace them",h("br"),
+            "\u2022 Avoid cambered roads; run on flat surfaces or track"
+          )
+        ),
+
+        h("div",{style:{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:14}},
+          h("div",{style:{fontSize:11,fontWeight:700,color:C.orange,textTransform:"uppercase",letterSpacing:1,marginBottom:8,fontFamily:C.mono}},"Supplement Support"),
+          h("div",{style:{color:"#999"}},
+            "Your existing supplement stack helps here: ",h("strong",{style:{color:C.text}},"omega-3s")," reduce tendon inflammation, ",h("strong",{style:{color:C.text}},"magnesium glycinate")," supports muscle relaxation and recovery, and ",h("strong",{style:{color:C.text}},"zinc carnosine")," aids tissue repair. Consider adding ",h("strong",{style:{color:C.accent}},"collagen peptides (15g)")," with ",h("strong",{style:{color:C.accent}},"vitamin C")," 30\u201360 min before exercise \u2014 research shows this combination increases collagen synthesis in tendons."
+          )
+        )
       )
-    ) : null,
+    ):null,
 
-    // RACE STRATEGY TAB
-    tab === "race" ? h("div", null,
-      h("h2", { style:{fontSize:20,fontWeight:700,marginBottom:16} }, RACE_STRATEGY.title),
-      h("div", { style:{fontSize:13,color:"#555",marginBottom:16,lineHeight:1.6} }, "The #1 mistake in a marathon is going out too fast. Start slower than you think you should. The race begins at mile 20."),
-      RACE_STRATEGY.paces.map(function(p,i) {
-        return h("div", { key:i, style:{display:"flex",gap:14,padding:"12px 0",borderBottom:i<RACE_STRATEGY.paces.length-1?"1px solid #f0f0f0":"none",alignItems:"flex-start"} },
-          h("div", { style:{width:90,flexShrink:0} },
-            h("div", { style:{fontSize:13,fontWeight:700} }, p.segment),
-            h("div", { style:{fontSize:16,fontWeight:300,color:"#1565C0",marginTop:2} }, p.pace)
-          ),
-          h("div", { style:{fontSize:13,color:"#555",lineHeight:1.5,paddingTop:2} }, p.note)
-        );
-      }),
-      h("div", { style:{marginTop:20,padding:14,background:"#E8F5E9",borderRadius:8,border:"1px solid #A5D6A7",fontSize:13,lineHeight:1.6,color:"#1B5E20"} }, h("strong",null,"Fuel stations: "), RACE_STRATEGY.fuel),
-      h("div", { style:{marginTop:12,padding:14,background:"#F3E5F5",borderRadius:8,border:"1px solid #CE93D8",fontSize:13,lineHeight:1.6,color:"#4A148C"} }, h("strong",null,"Target finish: "), "~3:55:00. That gives you a 5-minute buffer under 4:00.")
-    ) : null
+    // PHASE 2 PREVIEW
+    tab==="phase2"?h("div",null,
+      h("h2",{style:{fontSize:18,fontWeight:700,marginBottom:14,color:C.text}},"Phase 2: Marathon Build"),
+      h("div",{style:{fontSize:13,lineHeight:1.7,color:C.textMuted}},
+        h("div",{style:{background:C.card,border:"1px solid "+C.accent+"40",borderRadius:8,padding:14,marginBottom:14}},
+          h("div",{style:{fontSize:11,fontWeight:700,color:C.accent,textTransform:"uppercase",letterSpacing:1,marginBottom:8,fontFamily:C.mono}},"Timeline"),
+          h("div",{style:{color:"#999"}},"Phase 2 starts after you complete these 12 weeks (~late July/early August). It\u2019s a 12\u201314 week marathon-specific build targeting a ",h("strong",{style:{color:C.text}},"fall race in October or November"),"."),
+          h("div",{style:{marginTop:8,color:"#999"}},"Target races to research closer to the date: REVEL Big Cottonwood (Sat, Sep 12, SLC), St. George Marathon (Oct, lottery), California International Marathon (Dec 7, Sacramento), or The Original Las Vegas Marathon (Oct 11, Henderson).")
+        ),
+        h("div",{style:{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:14,marginBottom:14}},
+          h("div",{style:{fontSize:11,fontWeight:700,color:C.green,textTransform:"uppercase",letterSpacing:1,marginBottom:8,fontFamily:C.mono}},"Structure"),
+          h("div",{style:{color:"#999"}},
+            "\u2022 Running increases to 4\u20135 days/week with long runs building to 20 mi",h("br"),
+            "\u2022 Lifting drops to 2 days/week (upper + lower maintenance)",h("br"),
+            "\u2022 Tempo runs and intervals reintroduce race-pace work",h("br"),
+            "\u2022 3-week taper before race day",h("br"),
+            "\u2022 Your strength base from Phase 1 will make you a more injury-resistant, more powerful runner"
+          )
+        ),
+        h("div",{style:{background:C.card,border:"1px solid "+C.border,borderRadius:8,padding:14}},
+          h("div",{style:{fontSize:11,fontWeight:700,color:C.blue,textTransform:"uppercase",letterSpacing:1,marginBottom:8,fontFamily:C.mono}},"Entry Requirements"),
+          h("div",{style:{color:"#999"}},
+            "Before starting Phase 2, you should be able to:",h("br"),
+            "\u2022 Run 10\u201311 miles pain-free",h("br"),
+            "\u2022 Run 3 days/week at 18\u201320 mi/week consistently",h("br"),
+            "\u2022 Complete a 4-mile tempo at ~9:00 pace",h("br"),
+            "\u2022 No peroneal tendon flare-ups for at least 3 weeks",h("br"),h("br"),
+            "If you\u2019re not there yet at week 12, we extend Phase 1. No rush \u2014 the marathon isn\u2019t going anywhere."
+          )
+        )
+      )
+    ):null
   );
 }
 
